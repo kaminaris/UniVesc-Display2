@@ -99,4 +99,4 @@ class LGFXCustom : public lgfx::LGFX_Device {
 	}
 };
 
-#endif	// LUMIA_ESP32_LGFX_H
+#endif

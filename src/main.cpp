@@ -34,9 +34,6 @@
 #define I2S_BCLK 36
 #define I2S_LRC 35
 
-long currentMillis;
-bool onConnect;
-bool activeRequest;
 long timeout;
 
 /* Change to your screen resolution */
@@ -46,8 +43,7 @@ static const uint32_t screenHeight = 480;
 static lv_disp_draw_buf_t draw_buf;
 static lv_disp_drv_t disp_drv;
 
-uint8_t brightness = 100;
-uint64_t themeColor = 0;
+uint8_t brightness = 200;
 
 // Create an instance of the prepared class.
 LGFXCustom tft;
@@ -85,31 +81,20 @@ void my_touchpad_read(lv_indev_drv_t* indev_driver, lv_indev_data_t* data) {
 		/*Set the coordinates*/
 		data->point.x = touchX;
 		data->point.y = touchY;
-		currentMillis = millis();
 	}
 }
 
-void lvglLoop(void* parameter) {
+[[noreturn]] void lvglLoop(void* parameter) {
 	while (true) {
 		lv_timer_handler();
 		delay(5);
 	}
 
-	vTaskDelete(NULL);
+	vTaskDelete(nullptr);
 }
 
 void guiHandler() {
-	xTaskCreatePinnedToCore(
-		// xTaskCreate(
-		lvglLoop,	  // Function that should be called
-		"LVGL Loop",  // Name of the task (for debugging)
-		16384,		  // Stack size (bytes)
-		NULL,		  // Parameter to pass
-		1,			  // Task priority
-		// NULL
-		NULL,  // Task handle
-		1
-	);
+	xTaskCreatePinnedToCore(lvglLoop, "LVGL Loop", 16384, nullptr, 1, nullptr, 1);
 }
 
 [[noreturn]] void readVescTask(void* pvParameters) {
@@ -117,11 +102,8 @@ void guiHandler() {
 		vesc.read();
 
 		lv_bar_set_value(ui_batteryBar, vesc.batPercentage, LV_ANIM_OFF);
-		lv_color_t batteryColor = lv_color_make(
-			255 - 255 * vesc.batPercentage / 100, 
-			255 * vesc.batPercentage / 100, 
-			0
-		);
+		lv_color_t batteryColor =
+			lv_color_make(255 - 255 * vesc.batPercentage / 100, 255 * vesc.batPercentage / 100, 0);
 		lv_obj_set_style_bg_color(ui_batteryBar, batteryColor, LV_PART_INDICATOR);
 		lv_label_set_text(ui_batteryPercentage, (String(vesc.batPercentage, 0) + "%").c_str());
 		lv_label_set_text(ui_speed, String(vesc.velocity, 0).c_str());
@@ -210,8 +192,6 @@ void setup() {
 
 	tft.setBrightness(brightness);
 
-	currentMillis = millis();
-
 	xTaskCreatePinnedToCore(readVescTask, "ReadVesc", 8192, nullptr, 5, nullptr, ARDUINO_RUNNING_CORE);
 	xTaskCreatePinnedToCore(wireBusReadTask, "WireRead", 8192, nullptr, 6, nullptr, ARDUINO_RUNNING_CORE);
 
@@ -246,13 +226,13 @@ void setup() {
 	Serial.println("Device ready");
 }
 
-bool powerLossOccured = false;
+bool lossOccurred = false;
 void loop() {
 	int sensorValue = analogRead(10);
-	if (sensorValue < 2700 && !powerLossOccured && vesc.mode == Live) {
+	if (sensorValue < 2700 && !lossOccurred && vesc.mode == Live) {
 		vesc.saveInternal();
 		Serial.printf("power loss occured %d\n", sensorValue);
-		powerLossOccured = true;
+		lossOccurred = true;
 	}
 
 	delay(1);
