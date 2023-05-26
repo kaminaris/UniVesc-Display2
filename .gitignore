@@ -4,3 +4,7 @@
 .vscode/launch.json
 .vscode/ipch
 .idea
+CMakeLists.txt
+CMakeListsPrivate.txt
+cmake-build-debug
+cmake-build-wt32-sc01-plus

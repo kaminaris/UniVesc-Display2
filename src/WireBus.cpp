@@ -1,5 +1,7 @@
 #include "WireBus.h"
 
+// EEPROM Code borrowed from https://github.com/cyberp/AT24Cx
+
 uint8_t BcdToUint8(uint8_t val) {
 	return val - 6 * (val >> 4);
 }

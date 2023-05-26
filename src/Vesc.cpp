@@ -5,10 +5,11 @@
 EspSoftwareSerial::UART testSerial;
 
 void Vesc::init() {
-	// Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
-	testSerial.begin(115200, EspSoftwareSerial::SWSERIAL_8N1, RXD2, TXD2);
+	Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
+	//testSerial.begin(115200, EspSoftwareSerial::SWSERIAL_8N1, RXD2, TXD2);
 	vescUart = new VescUart(300);
-	vescUart->setSerialPort(&testSerial);
+	vescUart->setSerialPort(&Serial2);
+	// vescUart->setSerialPort(&testSerial);
 	// vescUart->setDebugPort(&Serial);
 }
 
