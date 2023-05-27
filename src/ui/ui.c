@@ -36,10 +36,12 @@ lv_obj_t * ui_dutyPanel;
 lv_obj_t * ui_dutyLabel;
 lv_obj_t * ui_duty;
 lv_obj_t * ui_odoPanel;
+void ui_event_odoLabel(lv_event_t * e);
 lv_obj_t * ui_odoLabel;
 void ui_event_odo(lv_event_t * e);
 lv_obj_t * ui_odo;
 lv_obj_t * ui_tripPanel;
+void ui_event_tripLabel(lv_event_t * e);
 lv_obj_t * ui_tripLabel;
 void ui_event_trip(lv_event_t * e);
 lv_obj_t * ui_trip;
@@ -117,12 +119,28 @@ void ui_event_filler(lv_event_t * e)
         readClockToScreen(e);
     }
 }
+void ui_event_odoLabel(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        odoClicked(e);
+    }
+}
 void ui_event_odo(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         odoClicked(e);
+    }
+}
+void ui_event_tripLabel(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        tripClicked(e);
     }
 }
 void ui_event_trip(lv_event_t * e)

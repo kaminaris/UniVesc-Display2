@@ -95,8 +95,6 @@ void Vesc::loadInternal() {
 
 	Serial.printf("loaded %f, %f", maxSpeed, odo);
 	origOdo = odo;
-	// save();
-	// delay(20);
 	loadRequested = false;
 }
 

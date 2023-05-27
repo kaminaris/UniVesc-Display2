@@ -6,7 +6,6 @@
 #ifndef _UI_EVENTS_H
 #define _UI_EVENTS_H
 
-
 void readClockToScreen(lv_event_t * e);
 void odoClicked(lv_event_t * e);
 void tripClicked(lv_event_t * e);

@@ -50,9 +50,9 @@ Vesc vesc;
 		lv_label_set_text(ui_batteryVoltage, (String(vesc.voltage, 1) + "V").c_str());
 		lv_label_set_text(ui_duty, (String(vesc.duty, 0) + "%").c_str());
 		lv_label_set_text(ui_trip, (String(vesc.distance, 1) + "km").c_str());
-		lv_label_set_text(ui_odo, (String(vesc.odo, 1) + "km").c_str());
-		lv_label_set_text(ui_maxSpeed, (String(vesc.maxSpeed, 1) + "km/h").c_str());
-		lv_label_set_text(ui_avgSpeed, (String(vesc.avgSpeed, 1) + "km/h").c_str());
+		lv_label_set_text(ui_odo, (String(vesc.odo, 0) + "km").c_str());
+		lv_label_set_text(ui_maxSpeed, (String(vesc.maxSpeed, 0) + "km/h").c_str());
+		lv_label_set_text(ui_avgSpeed, (String(vesc.avgSpeed, 0) + "km/h").c_str());
 
 		vTaskDelay(pdMS_TO_TICKS(500));
 	}
