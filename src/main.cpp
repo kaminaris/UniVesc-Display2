@@ -1,5 +1,4 @@
 #define LGFX_USE_V1
-// #define LGFX_AUTODETECT // Autodetect board
 
 #include <Arduino.h>
 #include <LGFXCustom.h>
@@ -30,8 +29,6 @@
 #define I2S_DOUT 37
 #define I2S_BCLK 36
 #define I2S_LRC 35
-
-long timeout;
 
 bool lossOccurred = false;
 
@@ -84,9 +81,6 @@ void setup() {
 	tft.initDMA();
 	tft.startWrite();
 
-	// pinMode(SD_CS, OUTPUT);
-	// digitalWrite(SD_CS, HIGH);
-
 	vesc.init();
 	vesc.load();
 
@@ -130,7 +124,6 @@ void setup() {
 	}
 
 	Serial.println(info);
-
 	Serial.println("Device ready");
 }
 
@@ -138,7 +131,7 @@ void loop() {
 	int sensorValue = analogRead(10);
 	if (sensorValue < 2700 && !lossOccurred && vesc.mode == Live) {
 		vesc.saveInternal();
-		Serial.printf("power loss occured %d\n", sensorValue);
+		Serial.printf("power loss occurred %d\n", sensorValue);
 		lossOccurred = true;
 	}
 

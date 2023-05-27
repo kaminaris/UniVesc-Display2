@@ -11,24 +11,24 @@
 static const uint32_t screenWidth = 320;
 static const uint32_t screenHeight = 480;
 
-static lv_disp_draw_buf_t draw_buf;
-static lv_disp_drv_t disp_drv;
+static lv_disp_draw_buf_t drawingBuffer;
+static lv_disp_drv_t displayDriver;
 
-static lv_color_t disp_draw_buf[screenWidth * SCR];
-static lv_color_t disp_draw_buf2[screenWidth * SCR];
+static lv_color_t displayDrawBuffer[screenWidth * SCR];
+static lv_color_t displayDrawBuffer2[screenWidth * SCR];
 
 uint8_t brightness = 200;
 
 class LGFXCustom : public lgfx::LGFX_Device {
-	lgfx::Panel_ST7796 _panel_instance;
-	lgfx::Bus_Parallel8 _bus_instance;
-	lgfx::Light_PWM _light_instance;
-	lgfx::Touch_FT5x06 _touch_instance;
+	lgfx::Panel_ST7796 panelInstance;
+	lgfx::Bus_Parallel8 busInstance;
+	lgfx::Light_PWM lightInstance;
+	lgfx::Touch_FT5x06 touchInstance;
 
 	public:
 	LGFXCustom() {
 		{
-			auto cfg = _bus_instance.config();
+			auto cfg = busInstance.config();
 
 			cfg.port = 0;
 			cfg.freq_write = 20000000;
@@ -44,12 +44,12 @@ class LGFXCustom : public lgfx::LGFX_Device {
 			cfg.pin_d6 = 16;  // pin connecting D6
 			cfg.pin_d7 = 15;  // pin connecting D7
 
-			_bus_instance.config(cfg);				 // Apply the settings to the bus.
-			_panel_instance.setBus(&_bus_instance);	 // Sets the bus to the panel.
+			busInstance.config(cfg);				 // Apply the settings to the bus.
+			panelInstance.setBus(&busInstance);	 // Sets the bus to the panel.
 		}
 
 		{										  // Set display panel control.
-			auto cfg = _panel_instance.config();  // Get the structure for display panel settings.
+			auto cfg = panelInstance.config();  // Get the structure for display panel settings.
 
 			cfg.pin_cs = -1;	// pin to which CS is connected (-1 = disable)
 			cfg.pin_rst = 4;	// pin where RST is connected (-1 = disable)
@@ -73,23 +73,23 @@ class LGFXCustom : public lgfx::LGFX_Device {
 			cfg.dlen_16bit = false;
 			cfg.bus_shared = true;
 
-			_panel_instance.config(cfg);
+			panelInstance.config(cfg);
 		}
 
 		{										  // Set backlight control. (delete if not necessary)
-			auto cfg = _light_instance.config();  // Get the structure for backlight configuration.
+			auto cfg = lightInstance.config();  // Get the structure for backlight configuration.
 
 			cfg.pin_bl = 45;	  // pin to which the backlight is connected
 			cfg.invert = false;	  // true to invert backlight brightness
 			cfg.freq = 44100;	  // backlight PWM frequency
 			cfg.pwm_channel = 0;  // PWM channel number to use
 
-			_light_instance.config(cfg);
-			_panel_instance.setLight(&_light_instance);	 // Sets the backlight to the panel.
+			lightInstance.config(cfg);
+			panelInstance.setLight(&lightInstance);	 // Sets the backlight to the panel.
 		}
 
 		{  // Configure settings for touch screen control. (delete if not necessary)
-			auto cfg = _touch_instance.config();
+			auto cfg = touchInstance.config();
 
 			cfg.x_min = 0;	  // Minimum X value (raw value) obtained from the touchscreen
 			cfg.x_max = 319;  // Maximum X value (raw value) obtained from the touchscreen
@@ -106,11 +106,11 @@ class LGFXCustom : public lgfx::LGFX_Device {
 			cfg.pin_scl = 5;	  // pin to which SCL is connected
 			cfg.freq = 400000;	  // set I2C clock
 
-			_touch_instance.config(cfg);
-			_panel_instance.setTouch(&_touch_instance);	 // Set the touchscreen to the panel.
+			touchInstance.config(cfg);
+			panelInstance.setTouch(&touchInstance);	 // Set the touchscreen to the panel.
 		}
 
-		setPanel(&_panel_instance);	 // Sets the panel to use.
+		setPanel(&panelInstance);	 // Sets the panel to use.
 	}
 
 	[[noreturn]] static void lvglLoop(void* parameter) {
@@ -122,7 +122,7 @@ class LGFXCustom : public lgfx::LGFX_Device {
 		vTaskDelete(nullptr);
 	}
 
-	void guiHandler() {
+	static void guiHandler() {
 		xTaskCreatePinnedToCore(LGFXCustom::lvglLoop, "LVGL Loop", 16384, nullptr, 1, nullptr, 1);
 	}
 };
@@ -131,7 +131,7 @@ class LGFXCustom : public lgfx::LGFX_Device {
 LGFXCustom tft;
 
 /* Display flushing */
-void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p) {
+void customDisplayFlush(lv_disp_drv_t* display, const lv_area_t* area, lv_color_t* color_p) {
 	if (tft.getStartCount() == 0) {
 		tft.endWrite();
 	}
@@ -140,11 +140,11 @@ void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color
 		area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1, (lgfx::swap565_t*)&color_p->full
 	);
 
-	lv_disp_flush_ready(disp); /* tell lvgl that flushing is done */
+	lv_disp_flush_ready(display); /* tell lvgl that flushing is done */
 }
 
 /* Read the touchpad */
-void my_touchpad_read(lv_indev_drv_t* indev_driver, lv_indev_data_t* data) {
+void customTouchpadRead(lv_indev_drv_t* inputDeviceDriver, lv_indev_data_t* data) {
 	uint16_t touchX, touchY;
 
 	bool touched = tft.getTouch(&touchX, &touchY);
@@ -162,36 +162,36 @@ void my_touchpad_read(lv_indev_drv_t* indev_driver, lv_indev_data_t* data) {
 }
 
 void tftSetup() {
-	if (!disp_draw_buf) {
+	if (!displayDrawBuffer) {
 		Serial.println("LVGL disp_draw_buf allocate failed!");
 	}
 	else {
 		Serial.print("Display buffer size: ");
 
-		lv_disp_draw_buf_init(&draw_buf, disp_draw_buf, disp_draw_buf2, screenWidth * SCR);
+		lv_disp_draw_buf_init(&drawingBuffer, displayDrawBuffer, displayDrawBuffer2, screenWidth * SCR);
 
 		/* Initialize the display */
-		lv_disp_drv_init(&disp_drv);
+		lv_disp_drv_init(&displayDriver);
 		/* Change the following line to your display resolution */
-		disp_drv.hor_res = screenWidth;
-		disp_drv.ver_res = screenHeight;
-		disp_drv.flush_cb = my_disp_flush;
-		disp_drv.draw_buf = &draw_buf;
-		lv_disp_drv_register(&disp_drv);
+		displayDriver.hor_res = screenWidth;
+		displayDriver.ver_res = screenHeight;
+		displayDriver.flush_cb = customDisplayFlush;
+		displayDriver.draw_buf = &drawingBuffer;
+		lv_disp_drv_register(&displayDriver);
 
 		/* Initialize the input device driver */
-		static lv_indev_drv_t indev_drv;
-		lv_indev_drv_init(&indev_drv);
-		indev_drv.type = LV_INDEV_TYPE_POINTER;
-		indev_drv.read_cb = my_touchpad_read;
-		lv_indev_drv_register(&indev_drv);
+		static lv_indev_drv_t inputDeviceDriver;
+		lv_indev_drv_init(&inputDeviceDriver);
+		inputDeviceDriver.type = LV_INDEV_TYPE_POINTER;
+		inputDeviceDriver.read_cb = customTouchpadRead;
+		lv_indev_drv_register(&inputDeviceDriver);
 
 		ui_init();
 
 		Serial.println("Setup done");
 	}
 
-	tft.guiHandler();
+	LGFXCustom::guiHandler();
 
 	tft.setBrightness(brightness);
 }
