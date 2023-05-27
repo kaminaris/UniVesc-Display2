@@ -26,7 +26,7 @@ void Vesc::read() {
 
 		motorTemp = vescUart->data.tempMotor;
 		mosfetTemp = vescUart->data.tempMosfet;
-		duty = abs(vescUart->data.dutyCycleNow);
+		duty = abs(vescUart->data.dutyCycleNow) * 100;
 		wattHours = vescUart->data.wattHours;
 
 		voltage = vescUart->data.inpVoltage;
@@ -36,14 +36,17 @@ void Vesc::read() {
 		// Code borrowed from
 		// https://github.com/TomStanton/VESC_LCD_EBIKE/blob/master/VESC6_LCD_EBIKE.ino
 
-		// The '42' is the number of motor poles multiplied by 3
-		tachometer = (vescUart->data.tachometerAbs) / MOTOR_POLE_PAIRS * 3;
-		rpm = (vescUart->data.rpm) / MOTOR_POLE_PAIRS;
-		// Motor tacho x Pi x (1 / meters in a mile or km) x Wheel diameter x (motor pulley / wheelpulley)
-		distance = tachometer * PI * (1.0 / 1000.0) * WHEEL_DIAMETER * (MOTOR_PULLEY / WHEEL_PULLEY);
-		// Motor RPM x Pi x (seconds in a minute / meters in a kilometer) x Wheel diameter x (motor pulley /
-		// wheelpulley)
-		velocity = rpm * PI * WHEEL_DIAMETER * (60.0 / 1000.0) * (MOTOR_PULLEY / WHEEL_PULLEY);
+		// This is the number of motor poles multiplied by 3
+		tachometer = vescUart->data.tachometerAbs / (MOTOR_POLE_PAIRS * 2 * 3);
+
+		rpm = vescUart->data.rpm / MOTOR_POLE_PAIRS;
+
+		// Motor tacho x Pi x (1 / meters in a mile or km) x Wheel diameter x gear ratio
+		distance = tachometer * PI * (1.0 / 1000.0) * WHEEL_DIAMETER * GEAR_RATIO;
+
+		// Motor RPM x Pi x (seconds in a minute / meters in a kilometer) x Wheel diameter x gear ratio
+		velocity = rpm * PI * WHEEL_DIAMETER * (60.0 / 1000.0) * GEAR_RATIO;
+
 		// ((Battery voltage - minimum voltage) / number of cells) x 100
 		batPercentage =
 			100 * (vescUart->data.inpVoltage - MIN_BATTERY_VOLTAGE) / (MAX_BATTERY_VOLTAGE - MIN_BATTERY_VOLTAGE);

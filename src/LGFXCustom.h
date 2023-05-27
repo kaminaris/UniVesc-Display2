@@ -2,7 +2,22 @@
 #define LUMIA_ESP32_LGFX_H
 
 #include <lvgl.h>
+#include "ui/ui.h"
 #include <LovyanGFX.hpp>
+
+#define SCR 30
+
+/* Change to your screen resolution */
+static const uint32_t screenWidth = 320;
+static const uint32_t screenHeight = 480;
+
+static lv_disp_draw_buf_t draw_buf;
+static lv_disp_drv_t disp_drv;
+
+static lv_color_t disp_draw_buf[screenWidth * SCR];
+static lv_color_t disp_draw_buf2[screenWidth * SCR];
+
+uint8_t brightness = 200;
 
 class LGFXCustom : public lgfx::LGFX_Device {
 	lgfx::Panel_ST7796 _panel_instance;
@@ -97,6 +112,87 @@ class LGFXCustom : public lgfx::LGFX_Device {
 
 		setPanel(&_panel_instance);	 // Sets the panel to use.
 	}
+
+	[[noreturn]] static void lvglLoop(void* parameter) {
+		while (true) {
+			lv_timer_handler();
+			delay(5);
+		}
+
+		vTaskDelete(nullptr);
+	}
+
+	void guiHandler() {
+		xTaskCreatePinnedToCore(LGFXCustom::lvglLoop, "LVGL Loop", 16384, nullptr, 1, nullptr, 1);
+	}
 };
 
+// Create an instance of the prepared class.
+LGFXCustom tft;
+
+/* Display flushing */
+void my_disp_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p) {
+	if (tft.getStartCount() == 0) {
+		tft.endWrite();
+	}
+
+	tft.pushImageDMA(
+		area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1, (lgfx::swap565_t*)&color_p->full
+	);
+
+	lv_disp_flush_ready(disp); /* tell lvgl that flushing is done */
+}
+
+/* Read the touchpad */
+void my_touchpad_read(lv_indev_drv_t* indev_driver, lv_indev_data_t* data) {
+	uint16_t touchX, touchY;
+
+	bool touched = tft.getTouch(&touchX, &touchY);
+
+	if (!touched) {
+		data->state = LV_INDEV_STATE_REL;
+	}
+	else {
+		data->state = LV_INDEV_STATE_PR;
+
+		/*Set the coordinates*/
+		data->point.x = touchX;
+		data->point.y = touchY;
+	}
+}
+
+void tftSetup() {
+	if (!disp_draw_buf) {
+		Serial.println("LVGL disp_draw_buf allocate failed!");
+	}
+	else {
+		Serial.print("Display buffer size: ");
+
+		lv_disp_draw_buf_init(&draw_buf, disp_draw_buf, disp_draw_buf2, screenWidth * SCR);
+
+		/* Initialize the display */
+		lv_disp_drv_init(&disp_drv);
+		/* Change the following line to your display resolution */
+		disp_drv.hor_res = screenWidth;
+		disp_drv.ver_res = screenHeight;
+		disp_drv.flush_cb = my_disp_flush;
+		disp_drv.draw_buf = &draw_buf;
+		lv_disp_drv_register(&disp_drv);
+
+		/* Initialize the input device driver */
+		static lv_indev_drv_t indev_drv;
+		lv_indev_drv_init(&indev_drv);
+		indev_drv.type = LV_INDEV_TYPE_POINTER;
+		indev_drv.read_cb = my_touchpad_read;
+		lv_indev_drv_register(&indev_drv);
+
+		ui_init();
+
+		Serial.println("Setup done");
+	}
+
+	tft.guiHandler();
+
+	tft.setBrightness(brightness);
+}
 #endif
