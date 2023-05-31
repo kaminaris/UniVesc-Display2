@@ -6,18 +6,13 @@
 
 #include "VescUart.h"
 #include "WireBus.h"
+#include "VescSettings.h"
 
 #define RXD2 14
 #define TXD2 11
 
-#define WHEEL_DIAMETER 0.5 // in meters
-#define MOTOR_PULLEY 1.0
-#define WHEEL_PULLEY 1.0
-#define GEAR_RATIO (MOTOR_PULLEY / WHEEL_PULLEY)
-#define MOTOR_POLE_PAIRS 30.0
-#define MAX_BATTERY_VOLTAGE 84.0
-#define MIN_BATTERY_VOLTAGE 50.0
-#define MAX_MOTOR_CURRENT 35.0
+
+#define GEAR_RATIO (settings.motorPulley / settings.wheelPulley)
 
 enum AppMode { Demo, Live };
 
@@ -36,10 +31,14 @@ class Vesc {
 	float duty = 0;
 	float wattHours = 0;
 
-	float maxSpeed = 0;
+	// calculated values, not saved
 	float avgSpeed = 0;
-	float odo = 0;
 	float origOdo = 0;
+
+	// settings
+	struct VescSettings origSettings = {};
+	struct VescSettings settings = {};
+
 	bool loadRequested = false;
 	bool saveRequested = false;
 	AppMode mode = Demo;
@@ -54,6 +53,7 @@ class Vesc {
 
 	void loadInternal();
 	void saveInternal();
+	void resetSettings();
 };
 
 #endif

@@ -42,7 +42,7 @@ void saveClock(lv_event_t* e) {
 void odoClicked(lv_event_t* e) {
 	// Your code here
 	Serial.println("odo click");
-	vesc.odo = 0.0;
+	vesc.settings.odo = 0.0;
 	vesc.save();
 }
 
@@ -63,6 +63,6 @@ void tripClicked(lv_event_t* e) {
 void maxSpeedClicked(lv_event_t* e) {
 	// Your code here
 	Serial.println("max speed click");
-	vesc.maxSpeed = 0.0;
+	vesc.settings.maxSpeed = 0.0;
 	vesc.save();
 }

@@ -8,6 +8,7 @@
 #include "Vesc.h"
 #include "WireBus.h"
 #include "ui/ui.h"
+#include "AppSerial.h"
 
 #define TFT_RST 4
 #define TFT_CS -1
@@ -17,7 +18,6 @@
 // #define I2C_SCL 5
 #define RST_N_PIN -1
 #define INT_N_PIN 7
-
 
 #define MUSIC_PLAYER
 
@@ -50,8 +50,8 @@ Vesc vesc;
 		lv_label_set_text(ui_batteryVoltage, (String(vesc.voltage, 1) + "V").c_str());
 		lv_label_set_text(ui_duty, (String(vesc.duty, 0) + "%").c_str());
 		lv_label_set_text(ui_trip, (String(vesc.distance, 1) + "km").c_str());
-		lv_label_set_text(ui_odo, (String(vesc.odo, 0) + "km").c_str());
-		lv_label_set_text(ui_maxSpeed, (String(vesc.maxSpeed, 0) + "km/h").c_str());
+		lv_label_set_text(ui_odo, (String(vesc.settings.odo, 0) + "km").c_str());
+		lv_label_set_text(ui_maxSpeed, (String(vesc.settings.maxSpeed, 0) + "km/h").c_str());
 		lv_label_set_text(ui_avgSpeed, (String(vesc.avgSpeed, 0) + "km/h").c_str());
 
 		vTaskDelay(pdMS_TO_TICKS(500));
@@ -97,6 +97,8 @@ void setup() {
 	xTaskCreatePinnedToCore(readVescTask, "ReadVesc", 8192, nullptr, 5, nullptr, ARDUINO_RUNNING_CORE);
 	xTaskCreatePinnedToCore(wireBusReadTask, "WireRead", 8192, nullptr, 6, nullptr, ARDUINO_RUNNING_CORE);
 
+	AppSerial::setup();
+
 	uint64_t mac = ESP.getEfuseMac();
 
 	String info = "";
@@ -135,5 +137,5 @@ void loop() {
 		lossOccurred = true;
 	}
 
-	delay(1);
+	vTaskDelay(pdMS_TO_TICKS(100));
 }
