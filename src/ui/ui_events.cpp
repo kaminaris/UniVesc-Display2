@@ -15,7 +15,7 @@ extern Vesc vesc;
 
 void readClockToScreen(lv_event_t* e) {
 	// Your code here
-	Serial.println("clock click");
+	appSerial.println("clock click");
 	lv_dropdown_set_selected(ui_yearDropdown, WireBus::year - 2023);
 	lv_dropdown_set_selected(ui_monthDropdown, WireBus::month - 1);
 	lv_dropdown_set_selected(ui_dayDropdown, WireBus::day - 1);
@@ -26,7 +26,7 @@ void readClockToScreen(lv_event_t* e) {
 }
 
 void saveClock(lv_event_t* e) {
-	Serial.println("save clock click");
+	appSerial.println("save clock click");
 	lv_calendar_date_t d;
 	auto Y = lv_dropdown_get_selected(ui_yearDropdown) + 2023;
 	auto M = lv_dropdown_get_selected(ui_monthDropdown) + 1;
@@ -36,33 +36,33 @@ void saveClock(lv_event_t* e) {
 	auto m = lv_dropdown_get_selected(ui_minuteDropdown);
 	auto s = lv_dropdown_get_selected(ui_secondDropdown);
 	WireBus::setTime(s, m, h, 1, D, M, Y);
-	Serial.printf("selected date %d-%d-%d %d:%d:%d", Y, M, D, h, m, s);
+	appSerial.printf("selected date %d-%d-%d %d:%d:%d", Y, M, D, h, m, s);
 }
 
 void odoClicked(lv_event_t* e) {
 	// Your code here
-	Serial.println("odo click");
+	appSerial.println("odo click");
 	vesc.settings.odo = 0.0;
 	vesc.save();
 }
 
 void avgClicked(lv_event_t* e) {
 	// Your code here
-	Serial.println("avg click");
+	appSerial.println("avg click");
 	vesc.avgSpeed = 0.0;
 	vesc.save();
 }
 
 void tripClicked(lv_event_t* e) {
 	// Your code here
-	Serial.println("trip click");
+	appSerial.println("trip click");
 	vesc.distance = 0.0;
 	vesc.save();
 }
 
 void maxSpeedClicked(lv_event_t* e) {
 	// Your code here
-	Serial.println("max speed click");
+	appSerial.println("max speed click");
 	vesc.settings.maxSpeed = 0.0;
 	vesc.save();
 }

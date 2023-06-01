@@ -49,7 +49,7 @@ void Vesc::read() {
 		mode = Live;
 	}
 	else {
-		// Serial.println("Failed to get dataxx1!");
+		appSerial.println("Failed to get data!");
 #ifndef NO_DEMO
 		velocity = random(60);
 		voltage = random(MAX_BATTERY_VOLTAGE * 10) / 10;
@@ -79,7 +79,7 @@ void Vesc::loadInternal() {
 		settings = {};
 	}
 
-	Serial.printf(
+	appSerial.printf(
 		"loaded %f, %f, %f, %f, %f, %f, %f",
 		settings.motorPolePairs,
 		settings.minBatteryVoltage,
@@ -106,13 +106,13 @@ void Vesc::saveInternal() {
 
 		if (origB != currentB) {
 			WireBus::write(i, currentB);
-			Serial.printf("saving %d %d", i, currentB);
+			appSerial.printf("saving %d %d", i, currentB);
 		}
 	}
 
 	// sync orig settings since they were saved
 	memcpy((void*)&origSettings, (void*)&settings, sizeof settings);
-	Serial.printf(
+	appSerial.printf(
 		"saved %f, %f, %f, %f, %f, %f, %f",
 		settings.motorPolePairs,
 		settings.minBatteryVoltage,

@@ -7,6 +7,7 @@
 #include "VescUart.h"
 #include "WireBus.h"
 #include "VescSettings.h"
+#include "AppSerial.h"
 
 #define RXD2 14
 #define TXD2 11

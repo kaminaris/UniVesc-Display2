@@ -8,7 +8,8 @@
 enum class ResponseCode : u8_t {
 	OK = 7,
 	FAIL,
-	UNKNOWN_PACKET
+	UNKNOWN_PACKET,
+	PROGRESS
 };
 
 enum PacketType {
@@ -16,7 +17,9 @@ enum PacketType {
 	GET_CLOCK,
 	GET_EEPROM,
 	SET_EEPROM,
-	FIRMWARE_UPDATE
+	FIRMWARE_UPDATE,
+	GET_CHIP_INFO,
+	RESTART
 };
 
 struct Packed PingPacket {
@@ -25,6 +28,11 @@ struct Packed PingPacket {
 
 struct Packed BasicResponse {
 	u8_t r;
+};
+
+struct Packed ProgressResponse {
+	u8_t r;
+	u8_t progress;
 };
 
 struct Packed ClockResponse {

@@ -5,10 +5,10 @@
 #include <lvgl.h>
 #include <pgmspace.h>
 
+#include "AppSerial.h"
 #include "Vesc.h"
 #include "WireBus.h"
 #include "ui/ui.h"
-#include "AppSerial.h"
 
 #define TFT_RST 4
 #define TFT_CS -1
@@ -87,10 +87,10 @@ void setup() {
 	WireBus::init();
 	lv_init();
 
-	Serial.print("Width: ");
-	Serial.print(screenWidth);
-	Serial.print("\tHeight: ");
-	Serial.println(screenHeight);
+	appSerial.print("Width: ");
+	appSerial.print(screenWidth);
+	appSerial.print("\tHeight: ");
+	appSerial.println(screenHeight);
 
 	tftSetup();
 
@@ -99,41 +99,14 @@ void setup() {
 
 	AppSerial::setup();
 
-	uint64_t mac = ESP.getEfuseMac();
-
-	String info = "";
-
-	info += "\nChip model: " + String(ESP.getChipModel());
-	info += "\nChip cores: " + String(ESP.getChipCores());
-	info += "\nChip frequency: " + String(ESP.getCpuFreqMHz()) + "Mhz";
-	info += "\nChip version: " + String(ESP.getChipRevision());
-
-	info += "\nRAM size: " + String((ESP.getHeapSize() / 1024.0), 0) + "kB";
-	info += "\nPSRAM size: " + String((ESP.getPsramSize() / (1024.0 * 1024.0)), 0) + "MB";
-
-	info += "\nFlash size: " + String((ESP.getFlashChipSize() / (1024.0 * 1024.0)), 0) + "MB";
-	info += "\nFlash speed: " + String((ESP.getFlashChipSpeed() / 1000000.0), 0) + "Mhz";
-
-	info += "\nSDK version: " + String(ESP.getSdkVersion());
-	info += "\nFirmware size: " + String((ESP.getSketchSize() / (1024.0 * 1024.0)), 0) + "MB";
-	info += "\nMAC address: ";
-
-	for (int i = 0; i < 6; i++) {
-		if (i > 0) {
-			info += "-";
-		}
-		info += String(byte(mac >> (i * 8) & 0xFF), HEX);
-	}
-
-	Serial.println(info);
-	Serial.println("Device ready");
+	appSerial.println("Device ready");
 }
 
 void loop() {
 	int sensorValue = analogRead(10);
 	if (sensorValue < 2700 && !lossOccurred && vesc.mode == Live) {
 		vesc.saveInternal();
-		Serial.printf("power loss occurred %d\n", sensorValue);
+		appSerial.printf("power loss occurred %d\n", sensorValue);
 		lossOccurred = true;
 	}
 

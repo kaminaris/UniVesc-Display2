@@ -3,6 +3,7 @@
 
 #include <lvgl.h>
 #include "ui/ui.h"
+#include "AppSerial.h"
 #include <LovyanGFX.hpp>
 
 #define SCR 30
@@ -163,10 +164,10 @@ void customTouchpadRead(lv_indev_drv_t* inputDeviceDriver, lv_indev_data_t* data
 
 void tftSetup() {
 	if (!displayDrawBuffer) {
-		Serial.println("LVGL disp_draw_buf allocate failed!");
+		appSerial.println("LVGL disp_draw_buf allocate failed!");
 	}
 	else {
-		Serial.print("Display buffer size: ");
+		appSerial.print("Display buffer size: ");
 
 		lv_disp_draw_buf_init(&drawingBuffer, displayDrawBuffer, displayDrawBuffer2, screenWidth * SCR);
 
@@ -188,7 +189,7 @@ void tftSetup() {
 
 		ui_init();
 
-		Serial.println("Setup done");
+		appSerial.println("Setup done");
 	}
 
 	LGFXCustom::guiHandler();

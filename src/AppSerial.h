@@ -18,6 +18,9 @@
 #define SERVICE_UUID "9C12D201-CBC3-413B-963B-9E49FF7E7D31"
 #define CHARACTERISTIC_UUID_TX "9C12D202-CBC3-413B-963B-9E49FF7E7D31"
 #define CHARACTERISTIC_UUID_RX "9C12D203-CBC3-413B-963B-9E49FF7E7D31"
+#define CHARACTERISTIC_UUID_DEBUG "9C12D204-CBC3-413B-963B-9E49FF7E7D31"
+
+#define DUAL_SERIAL
 
 class MyServerCallbacks : public NimBLEServerCallbacks {
 	void onDisconnect(NimBLEServer* pServer) override;
@@ -31,13 +34,16 @@ class MyCallbacks : public NimBLECharacteristicCallbacks {
 	void onWrite(NimBLECharacteristic* pCharacteristic) override;
 };
 
-class AppSerial {
+class AppSerial: public Print {
 	public:
+	size_t write(uint8_t) override;
+	size_t write(const uint8_t *buffer, size_t size) override;
 	static void setup();
-	[[noreturn]] static void loop(void* p);
 	static void respondOk();
 	static void respondFail();
 	static void respondUnknownPacket();
 };
+
+extern AppSerial appSerial;
 
 #endif

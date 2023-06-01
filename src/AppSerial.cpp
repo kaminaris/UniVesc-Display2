@@ -2,6 +2,7 @@
 
 NimBLEServer* pServer = nullptr;
 NimBLECharacteristic* pTxCharacteristic;
+NimBLECharacteristic* pDebugCharacteristic;
 
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
@@ -11,6 +12,7 @@ FastCRC32 CRC32;
 struct BasicResponse okResponse = {(u8_t)ResponseCode::OK};
 struct BasicResponse failResponse = {(u8_t)ResponseCode::FAIL};
 struct BasicResponse unknownPacketResponse = {(u8_t)ResponseCode::UNKNOWN_PACKET};
+struct ProgressResponse progressResponse = {.r = (u8_t)ResponseCode::PROGRESS, .progress = 0};
 
 void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 	auto rxValue = pCharacteristic->getValue();
@@ -37,6 +39,38 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				break;
 			}
 
+			case PacketType::GET_CHIP_INFO: {
+				uint64_t mac = ESP.getEfuseMac();
+
+				String info = "";
+
+				info += "\nChip model: " + String(ESP.getChipModel());
+				info += "\nChip cores: " + String(ESP.getChipCores());
+				info += "\nChip frequency: " + String(ESP.getCpuFreqMHz()) + "Mhz";
+				info += "\nChip version: " + String(ESP.getChipRevision());
+
+				info += "\nRAM size: " + String((ESP.getHeapSize() / 1024.0), 0) + "kB";
+				info += "\nPSRAM size: " + String((ESP.getPsramSize() / (1024.0 * 1024.0)), 0) + "MB";
+
+				info += "\nFlash size: " + String((ESP.getFlashChipSize() / (1024.0 * 1024.0)), 0) + "MB";
+				info += "\nFlash speed: " + String((ESP.getFlashChipSpeed() / 1000000.0), 0) + "Mhz";
+
+				info += "\nSDK version: " + String(ESP.getSdkVersion());
+				info += "\nFirmware size: " + String((ESP.getSketchSize() / (1024.0 * 1024.0)), 0) + "MB";
+				info += "\nMAC address: ";
+
+				for (int i = 0; i < 6; i++) {
+					if (i > 0) {
+						info += "-";
+					}
+					info += String(byte(mac >> (i * 8) & 0xFF), HEX);
+				}
+
+				appSerial.println(info);
+				AppSerial::respondOk();
+				break;
+			}
+
 			case PacketType::GET_CLOCK: {
 				struct ClockResponse clk = {
 					WireBus::year,
@@ -53,7 +87,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 
 			case PacketType::GET_EEPROM: {
 				auto* request = (EepromReadRequest*)data;
-				Serial.printf("Reading eeprom from address: %d\n", request->address);
+				appSerial.printf("Reading eeprom from address: %d\n", request->address);
 
 				struct EepromPacket rsp = {};
 				rsp.address = request->address;
@@ -66,7 +100,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 
 			case PacketType::SET_EEPROM: {
 				auto* request = (EepromPacket*)data;
-				Serial.printf("Writing eeprom from address: %d\n", request->address);
+				appSerial.printf("Writing eeprom from address: %d\n", request->address);
 
 				WireBus::write(request->address, (u8_t*)&request->d, 128);
 				AppSerial::respondOk();
@@ -76,18 +110,9 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 			case PacketType::FIRMWARE_UPDATE: {
 				auto* request = (FirmwareUpdateRequest*)data;
 
-				if (request->chunk % 20 == 0) {
-					Serial.printf(
-						"firmware update chunk: %d/%d crc: %08X\n",
-						request->chunk,
-						request->chunks,
-						request->checksum
-					);
-				}
-
 				auto chunkCrc = CRC32.crc32(request->d, request->size);
 				if (chunkCrc != request->checksum) {
-					Serial.printf(
+					appSerial.printf(
 						"Chunk CRC does not match! Calculated: %08X Given: %08X \n", chunkCrc, request->checksum
 					);
 
@@ -99,7 +124,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 
 				if (request->chunk == 1) {
 					if (!Update.begin(request->totalSize, U_FLASH)) {
-						Serial.println("Cannot start flash update!");
+						appSerial.println("Cannot start flash update!");
 						AppSerial::respondFail();
 						break;
 					}
@@ -108,12 +133,11 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				else if (request->chunk == request->chunks) {
 					Update.write(request->d, request->size);
 					if (Update.end()) {
-						Serial.println("Update finished!");
+						appSerial.println("Update finished!");
 						AppSerial::respondOk();
-						ESP.restart();
 					}
 					else {
-						Serial.printf("Update error: %d\n", Update.getError());
+						appSerial.printf("Update error: %d\n", Update.getError());
 						AppSerial::respondFail();
 					}
 				}
@@ -121,8 +145,29 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 					Update.write(request->d, request->size);
 				}
 
+				if (request->chunk % 50 == 0) {
+					progressResponse.progress =
+						static_cast<u8_t>((request->chunk / static_cast<double>(request->chunks)) * 100.0);
+
+					appSerial.printf(
+						"firmware update chunk: %d/%d progress: %d%%\n",
+						request->chunk,
+						request->chunks,
+						progressResponse.progress
+					);
+
+					pTxCharacteristic->setValue((u8_t*)&progressResponse, sizeof(progressResponse));
+					pTxCharacteristic->notify();
+				}
+
 				// do not respond
 				// AppSerial::respondOk();
+				break;
+			}
+
+			case PacketType::RESTART: {
+				delay(1000);
+				ESP.restart();
 				break;
 			}
 
@@ -136,8 +181,8 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 
 void MyServerCallbacks::onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
 	deviceConnected = true;
-	Serial.print("Client address: ");
-	Serial.println(NimBLEAddress(desc->peer_ota_addr).toString().c_str());
+	appSerial.print("Client address: ");
+	appSerial.println(NimBLEAddress(desc->peer_ota_addr).toString().c_str());
 	/** We can use the connection handle here to ask for different connection parameters.
 	 *  Args: connection handle, min connection interval, max connection interval
 	 *  latency, supervision timeout.
@@ -145,11 +190,11 @@ void MyServerCallbacks::onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc
 	 *  Latency: number of intervals allowed to skip.
 	 *  Timeout: 10 millisecond increments, try for 5x interval time for best results.
 	 */
-	pServer->updateConnParams(desc->conn_handle, 1, 1, 0, 60);
+	pServer->updateConnParams(desc->conn_handle, 6, 6, 0, 60);
 };
 
 void MyServerCallbacks::onMTUChange(uint16_t MTU, ble_gap_conn_desc* desc) {
-	Serial.printf("MTU updated: %u for connection ID: %u\n", MTU, desc->conn_handle);
+	appSerial.printf("MTU updated: %u for connection ID: %u\n", MTU, desc->conn_handle);
 };
 
 void MyServerCallbacks::onDisconnect(NimBLEServer* pServer) {
@@ -172,6 +217,7 @@ void AppSerial::setup() {
 
 	// Create a BLE Characteristic
 	pTxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_TX, NIMBLE_PROPERTY::NOTIFY);
+	pDebugCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_DEBUG, NIMBLE_PROPERTY::NOTIFY);
 
 	auto pRxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_RX, NIMBLE_PROPERTY::WRITE_NR);
 
@@ -192,30 +238,7 @@ void AppSerial::setup() {
 	// Start advertising
 	pAdvertising->start();
 
-	Serial.println("Waiting a client connection to notify...");
-
-	// xTaskCreatePinnedToCore(AppSerial::loop, "AppSerial::loop", 8192, nullptr, 6, nullptr, ARDUINO_RUNNING_CORE);
-}
-
-[[noreturn]] void AppSerial::loop(void* p) {
-	while (true) {
-		// disconnecting
-		if (!deviceConnected && oldDeviceConnected) {
-			delay(500);									 // give the bluetooth stack the chance to get things ready
-			bool success = pServer->startAdvertising();	 // restart advertising
-			Serial.print("start advertising: ");
-			Serial.println(success ? "true" : "false");
-			oldDeviceConnected = deviceConnected;
-		}
-
-		// connecting
-		if (deviceConnected && !oldDeviceConnected) {
-			// do stuff here on connecting
-			oldDeviceConnected = deviceConnected;
-		}
-
-		delay(10);
-	}
+	appSerial.println("Waiting a client connection to notify...");
 }
 
 void AppSerial::respondOk() {
@@ -232,3 +255,33 @@ void AppSerial::respondUnknownPacket() {
 	pTxCharacteristic->setValue((u8_t*)&unknownPacketResponse, sizeof(unknownPacketResponse));
 	pTxCharacteristic->notify();
 }
+
+size_t AppSerial::write(uint8_t character) {
+#ifdef DUAL_SERIAL
+	Serial.write(character);
+#endif
+	if (pDebugCharacteristic == nullptr) {
+		return 0;
+	}
+
+	pDebugCharacteristic->setValue(&character, 1);
+	pDebugCharacteristic->notify();
+
+	return 1;
+}
+
+size_t AppSerial::write(const uint8_t* buffer, size_t size) {
+#ifdef DUAL_SERIAL
+	Serial.write(buffer, size);
+#endif
+	if (pDebugCharacteristic == nullptr) {
+		return 0;
+	}
+
+	pDebugCharacteristic->setValue(buffer, size);
+	pDebugCharacteristic->notify();
+
+	return size;
+}
+
+AppSerial appSerial;
