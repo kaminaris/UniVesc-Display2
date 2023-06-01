@@ -1,5 +1,5 @@
-#ifndef LUMIA_ESP32_LGFX_H
-#define LUMIA_ESP32_LGFX_H
+#ifndef UNIVESCDISPLAY_LGFX_H
+#define UNIVESCDISPLAY_LGFX_H
 
 #include <lvgl.h>
 #include "ui/ui.h"

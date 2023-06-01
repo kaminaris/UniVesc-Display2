@@ -19,7 +19,11 @@ enum PacketType {
 	SET_EEPROM,
 	FIRMWARE_UPDATE,
 	GET_CHIP_INFO,
-	RESTART
+	RESTART,
+	GET_FILE_LIST,
+	GET_FILE,
+	WRITE_FILE,
+	DELETE_FILE,
 };
 
 struct Packed PingPacket {
@@ -44,6 +48,12 @@ struct Packed ClockResponse {
 	u8_t second;
 };
 
+struct Packed FileItemResponse {
+	u32_t index;
+	u32_t size;
+	u8_t fileName[128];
+};
+
 // both read and write
 struct Packed EepromReadRequest {
 	u16_t address;
@@ -56,6 +66,14 @@ struct Packed FirmwareUpdateRequest {
 	u32_t totalSize;
 	u32_t checksum;
 	u8_t d[450];
+};
+
+struct Packed FileWriteRequest {
+	u8_t fileName[128];
+	u32_t position;
+	u16_t size;
+	u32_t checksum;
+	u8_t d[256];
 };
 
 struct Packed EepromPacket {

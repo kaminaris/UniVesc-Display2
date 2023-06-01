@@ -71,6 +71,59 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				break;
 			}
 
+			case PacketType::GET_FILE_LIST: {
+				File root = SPIFFS.open("/");
+				File file = root.openNextFile();
+
+				u32_t i = 0;
+				while (file) {
+					auto fileName = file.name();
+					auto fileSize = file.size();
+
+					appSerial.print("FILE: ");
+					appSerial.println(fileName);
+
+					struct FileItemResponse fileItem = {.index = i, .size = fileSize};
+					memcpy(fileItem.fileName, fileName, strlen(fileName));
+
+					pTxCharacteristic->setValue((u8_t*)&fileItem, sizeof(fileItem));
+					pTxCharacteristic->notify();
+
+					file = root.openNextFile();
+					i++;
+				}
+				break;
+			}
+
+			case PacketType::WRITE_FILE: {
+				auto* request = (FileWriteRequest*)data;
+				auto fileName = (const char*)&request->fileName;
+				appSerial.printf("trying to write file %s", fileName);
+				File file = SPIFFS.open(fileName, "w");
+				if (!file) {
+					appSerial.println("Error opening file for writing");
+					AppSerial::respondFail();
+					return;
+				}
+
+				file.seek(request->position);
+				auto result = file.write((const u8_t*)&request->d, request->size);
+				file.close();
+
+				if (result == request->size) {
+					AppSerial::respondOk();
+				}
+				else {
+					AppSerial::respondFail();
+				}
+
+				break;
+			}
+
+			case PacketType::DELETE_FILE: {
+				break;
+			}
+
 			case PacketType::GET_CLOCK: {
 				struct ClockResponse clk = {
 					WireBus::year,

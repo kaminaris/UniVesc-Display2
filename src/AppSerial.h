@@ -2,16 +2,16 @@
 #define UNIVESCDISPLAY2_APPSERIAL_H
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
+#include <FastCRC.h>
 #include <NimBLEAdvertising.h>
 #include <NimBLEDevice.h>
 #include <NimBLEServer.h>
 #include <NimBLEUtils.h>
 #include <Update.h>
-#include <FastCRC.h>
 
 #include <cstring>
 
+#include "SPIFFS.h"
 #include "WireBus.h"
 #include "packets.h"
 
@@ -34,10 +34,10 @@ class MyCallbacks : public NimBLECharacteristicCallbacks {
 	void onWrite(NimBLECharacteristic* pCharacteristic) override;
 };
 
-class AppSerial: public Print {
+class AppSerial : public Print {
 	public:
 	size_t write(uint8_t) override;
-	size_t write(const uint8_t *buffer, size_t size) override;
+	size_t write(const uint8_t* buffer, size_t size) override;
 	static void setup();
 	static void respondOk();
 	static void respondFail();

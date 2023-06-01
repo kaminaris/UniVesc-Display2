@@ -1,8 +1,7 @@
-#ifndef LUMIA_ESP32_VESC_H
-#define LUMIA_ESP32_VESC_H
+#ifndef UNIVESCDISPLAY_VESC_H
+#define UNIVESCDISPLAY_VESC_H
 
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 
 #include "VescUart.h"
 #include "WireBus.h"

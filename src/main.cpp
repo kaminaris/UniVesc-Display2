@@ -9,6 +9,7 @@
 #include "Vesc.h"
 #include "WireBus.h"
 #include "ui/ui.h"
+#include "SoundPlayer.h"
 
 #define TFT_RST 4
 #define TFT_CS -1
@@ -19,16 +20,10 @@
 #define RST_N_PIN -1
 #define INT_N_PIN 7
 
-#define MUSIC_PLAYER
-
 #define SD_CS 41
 #define SDMMC_CMD 40
 #define SDMMC_CLK 39
 #define SDMMC_D0 38
-
-#define I2S_DOUT 37
-#define I2S_BCLK 36
-#define I2S_LRC 35
 
 bool lossOccurred = false;
 
@@ -98,6 +93,13 @@ void setup() {
 	xTaskCreatePinnedToCore(wireBusReadTask, "WireRead", 8192, nullptr, 6, nullptr, ARDUINO_RUNNING_CORE);
 
 	AppSerial::setup();
+
+	if (!SPIFFS.begin()) {
+		Serial.println("SPIFFS Mount Failed");
+		return;
+	}
+
+	SoundPlayer::init();
 
 	appSerial.println("Device ready");
 }
