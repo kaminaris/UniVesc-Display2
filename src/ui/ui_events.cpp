@@ -4,11 +4,11 @@
 // Project name: SquareLine_Project
 
 #include <Arduino.h>
-#include <HardwareSerial.h>
 
 #include "WireBus.h"
 #include "ui.h"
 #include "Vesc.h"
+#include "SoundPlayer.h"
 
 extern Vesc vesc;
 

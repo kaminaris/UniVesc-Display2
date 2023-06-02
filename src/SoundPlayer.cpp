@@ -2,42 +2,55 @@
 
 bool SoundPlayer::playing = false;
 Audio* SoundPlayer::audio = nullptr;
+QueueHandle_t SoundPlayer::audioSetQueue = nullptr;
 
 void SoundPlayer::init() {
 	audio = new Audio();
 	audio->setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-	// audio->m_pin_config = {};
-	// audio->m_pin_config.bck_io_num = BCLK;
-	// audio->m_pin_config.ws_io_num = LRC;  //  wclk
-	// audio->m_pin_config.data_out_num = DOUT;
-	// audio->m_pin_config.data_in_num = -1;
-	//
-	// const esp_err_t result = i2s_set_pin((i2s_port_t)m_i2s_num, &m_pin_config);
-	// return (result == ESP_OK);
-
 	audio->setVolume(5);  // 0...21
 	audio->forceMono(true);
 	playing = false;
+	audioSetQueue = xQueueCreate(10, sizeof(struct AudioMessage));
+
+	xTaskCreatePinnedToCore(SoundPlayer::loop, "Music Player", 16384, nullptr, 1, nullptr, 1);
+}
+
+void SoundPlayer::setVolume(u8_t volume) {
+	// audio->setVolume(volume);  // 0...21
+	struct AudioMessage msg = {
+		.cmd = (u8_t)SoundPlayer::SET_VOLUME,
+		.value = volume,
+	};
+	xQueueSend(audioSetQueue, &msg, portMAX_DELAY);
 }
 
 void SoundPlayer::play(const char* path) {
-	audio->connecttoFS(SPIFFS, path);
-
-	if (!playing) {
-		playing = true;
-		xTaskCreatePinnedToCore(SoundPlayer::loop, "Music Player", 16384, nullptr, 1, nullptr, 1);
-	}
+	struct AudioMessage msg = {
+		.cmd = (u8_t)SoundPlayer::PLAY,
+		.txt = path,
+	};
+	xQueueSend(audioSetQueue, &msg, portMAX_DELAY);
 }
 
-void SoundPlayer::loop(void* parameter) {
-	while (playing) {
+[[noreturn]] void SoundPlayer::loop(void* parameter) {
+	struct AudioMessage audioRxTaskMessage = {};
+
+	while (true) {
+		if (xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
+			if (audioRxTaskMessage.cmd == SoundPlayer::SET_VOLUME) {
+				audio->setVolume(audioRxTaskMessage.value);
+			}
+			else if (audioRxTaskMessage.cmd == SoundPlayer::PLAY) {
+				audio->connecttoFS(SPIFFS, audioRxTaskMessage.txt);
+			}
+		}
+
 		audio->loop();
 
-		// uint32_t act = audio.getAudioCurrentTime();
-		// uint32_t afd = audio.getAudioFileDuration();
+		if (!audio->isRunning()) {
+			sleep(1);
+		}
 	}
-
-	vTaskDelete(nullptr);
 }
 
 void SoundPlayer::playPause() {

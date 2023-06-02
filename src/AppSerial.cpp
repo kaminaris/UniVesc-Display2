@@ -83,7 +83,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 					appSerial.print("FILE: ");
 					appSerial.println(fileName);
 
-					struct FileItemResponse fileItem = {.index = i, .size = fileSize};
+					struct FileItemResponse fileItem = {.r = (u8_t)ResponseCode::FILE, .index = i, .size = fileSize};
 					memcpy(fileItem.fileName, fileName, strlen(fileName));
 
 					pTxCharacteristic->setValue((u8_t*)&fileItem, sizeof(fileItem));
@@ -92,14 +92,22 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 					file = root.openNextFile();
 					i++;
 				}
+
+				AppSerial::respondOk();
 				break;
 			}
 
 			case PacketType::WRITE_FILE: {
 				auto* request = (FileWriteRequest*)data;
 				auto fileName = (const char*)&request->fileName;
-				appSerial.printf("trying to write file %s", fileName);
-				File file = SPIFFS.open(fileName, "w");
+				appSerial.printf("trying to write file %s\n", fileName);
+
+				// clang-format off
+				File file = SPIFFS.open(
+					fileName, !SPIFFS.exists(fileName) || request->position == 0 ? FILE_WRITE : FILE_APPEND
+				);
+				// clang-format on
+
 				if (!file) {
 					appSerial.println("Error opening file for writing");
 					AppSerial::respondFail();
@@ -121,6 +129,18 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 			}
 
 			case PacketType::DELETE_FILE: {
+				break;
+			}
+
+			case PacketType::BEEP_TEST: {
+				SoundPlayer::play("/beep.mp3");
+				break;
+			}
+			case PacketType::SET_VOLUME: {
+				auto* request = (SetVolumeRequest*)data;
+
+				SoundPlayer::setVolume(request->volume);
+				AppSerial::respondOk();
 				break;
 			}
 

@@ -9,7 +9,8 @@ enum class ResponseCode : u8_t {
 	OK = 7,
 	FAIL,
 	UNKNOWN_PACKET,
-	PROGRESS
+	PROGRESS,
+	FILE
 };
 
 enum PacketType {
@@ -24,6 +25,8 @@ enum PacketType {
 	GET_FILE,
 	WRITE_FILE,
 	DELETE_FILE,
+	BEEP_TEST,
+	SET_VOLUME,
 };
 
 struct Packed PingPacket {
@@ -39,6 +42,10 @@ struct Packed ProgressResponse {
 	u8_t progress;
 };
 
+struct Packed SetVolumeRequest {
+	u8_t volume;
+};
+
 struct Packed ClockResponse {
 	u16_t year;
 	u8_t month;
@@ -49,6 +56,7 @@ struct Packed ClockResponse {
 };
 
 struct Packed FileItemResponse {
+	u8_t r;
 	u32_t index;
 	u32_t size;
 	u8_t fileName[128];
