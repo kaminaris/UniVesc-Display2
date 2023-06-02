@@ -57,7 +57,7 @@ class WireBus {
 
 	static void getTime();
 	static void
-	setTime(u8_t second, u8_t minute, u8_t hour, u8_t dayOfWeek, u8_t day, u8_t month, uint16_t year);
+	setTime(u8_t pSecond, u8_t pMinute, u8_t pHour, u8_t dayOfWeek, u8_t pDay, u8_t pMonth, uint16_t pYear);
 
 	protected:
 	static void write(unsigned int address, u8_t* data, int offset, int n);

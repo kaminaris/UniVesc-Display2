@@ -272,13 +272,13 @@ void WireBus::getTime() {
 }
 
 void WireBus::setTime(
-	u8_t second,
-	u8_t minute,
-	u8_t hour,
+	u8_t pSecond,
+	u8_t pMinute,
+	u8_t pHour,
 	u8_t dayOfWeek,
-	u8_t day,
-	u8_t month,
-	uint16_t year
+	u8_t pDay,
+	u8_t pMonth,
+	uint16_t pYear
 ) {
 	// u8_t sreg = getReg(DS1307_REG_STATUS) & _BV(DS1307_CH);
 
@@ -286,24 +286,24 @@ void WireBus::setTime(
 	Wire1.beginTransmission(DS1307_I2C_ADDRESS);
 	Wire1.write(DS1307_REG_TIMEDATE);
 
-	Wire1.write(Uint8ToBcd(second));  // | sreg
-	Wire1.write(Uint8ToBcd(minute));
-	Wire1.write(Uint8ToBcd(hour));	// 24 hour mode only
+	Wire1.write(Uint8ToBcd(pSecond));  // | sreg
+	Wire1.write(Uint8ToBcd(pMinute));
+	Wire1.write(Uint8ToBcd(pHour));	// 24 hour mode only
 
 	Wire1.write(Uint8ToBcd(dayOfWeek));
-	Wire1.write(Uint8ToBcd(day));
-	Wire1.write(Uint8ToBcd(month));
-	Wire1.write(Uint8ToBcd(year - 2000));
+	Wire1.write(Uint8ToBcd(pDay));
+	Wire1.write(Uint8ToBcd(pMonth));
+	Wire1.write(Uint8ToBcd(pYear - 2000));
 
 	u8_t _lastError = Wire1.endTransmission();
 	if (_lastError != 0) {
 		// Serial.println("fail");
 	}
 
-	WireBus::year = year;
-	WireBus::month = month;
-	WireBus::day = day;
-	WireBus::hour = hour;
-	WireBus::minute = minute;
-	WireBus::second = second;
+	WireBus::year = pYear;
+	WireBus::month = pMonth;
+	WireBus::day = pDay;
+	WireBus::hour = pHour;
+	WireBus::minute = pMinute;
+	WireBus::second = pSecond;
 }

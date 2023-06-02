@@ -56,8 +56,8 @@ class LGFXCustom : public lgfx::LGFX_Device {
 			cfg.pin_rst = 4;	// pin where RST is connected (-1 = disable)
 			cfg.pin_busy = -1;	// pin to which BUSY is connected (-1 = disable)
 
-			// * The following setting values ​​are set to general default values ​​for each panel, and the pin
-			// number (-1 = disable) to which BUSY is connected, so please try commenting out any unknown items.
+			// * The following setting values are set to general default values for each panel, and the pin
+			// (-1 = disable) to which BUSY is connected, so please try commenting out any unknown items.
 
 			cfg.memory_width = 320;	  // Maximum width supported by driver IC
 			cfg.memory_height = 480;  // Maximum height supported by driver IC
@@ -114,7 +114,7 @@ class LGFXCustom : public lgfx::LGFX_Device {
 		setPanel(&panelInstance);	 // Sets the panel to use.
 	}
 
-	[[noreturn]] static void lvglLoop(void* parameter) {
+	[[noreturn]] static void lvglLoop(__unused void* parameter) {
 		while (true) {
 			lv_timer_handler();
 			vTaskDelay(pdMS_TO_TICKS(5));
@@ -145,7 +145,7 @@ void customDisplayFlush(lv_disp_drv_t* display, const lv_area_t* area, lv_color_
 }
 
 /* Read the touchpad */
-void customTouchpadRead(lv_indev_drv_t* inputDeviceDriver, lv_indev_data_t* data) {
+void customTouchpadRead(__unused lv_indev_drv_t* inputDeviceDriver, lv_indev_data_t* data) {
 	uint16_t touchX, touchY;
 
 	bool touched = tft.getTouch(&touchX, &touchY);

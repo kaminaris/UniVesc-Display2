@@ -252,7 +252,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 	}
 }
 
-void MyServerCallbacks::onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
+void MyServerCallbacks::onConnect(NimBLEServer* server, ble_gap_conn_desc* desc) {
 	deviceConnected = true;
 	appSerial.print("Client address: ");
 	appSerial.println(NimBLEAddress(desc->peer_ota_addr).toString().c_str());
@@ -263,14 +263,14 @@ void MyServerCallbacks::onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc
 	 *  Latency: number of intervals allowed to skip.
 	 *  Timeout: 10 millisecond increments, try for 5x interval time for best results.
 	 */
-	pServer->updateConnParams(desc->conn_handle, 6, 6, 0, 60);
-};
+	server->updateConnParams(desc->conn_handle, 6, 6, 0, 60);
+}
 
 void MyServerCallbacks::onMTUChange(uint16_t MTU, ble_gap_conn_desc* desc) {
 	appSerial.printf("MTU updated: %u for connection ID: %u\n", MTU, desc->conn_handle);
-};
+}
 
-void MyServerCallbacks::onDisconnect(NimBLEServer* pServer) {
+void MyServerCallbacks::onDisconnect(NimBLEServer* server) {
 	deviceConnected = false;
 	NimBLEDevice::startAdvertising();
 }

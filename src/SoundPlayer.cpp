@@ -32,7 +32,7 @@ void SoundPlayer::play(const char* path) {
 	xQueueSend(audioSetQueue, &msg, portMAX_DELAY);
 }
 
-[[noreturn]] void SoundPlayer::loop(void* parameter) {
+[[noreturn]] void SoundPlayer::loop(__unused void* parameter) {
 	struct AudioMessage audioRxTaskMessage = {};
 
 	while (true) {
@@ -55,5 +55,4 @@ void SoundPlayer::play(const char* path) {
 
 void SoundPlayer::playPause() {
 	audio->pauseResume();
-	bool isPlay = audio->isRunning();
 }
