@@ -10,7 +10,8 @@ enum class ResponseCode : u8_t {
 	FAIL,
 	UNKNOWN_PACKET,
 	PROGRESS,
-	FILE
+	FILE,
+	FILE_CONTENT,
 };
 
 enum PacketType {
@@ -27,6 +28,7 @@ enum PacketType {
 	DELETE_FILE,
 	BEEP_TEST,
 	SET_VOLUME,
+	PLAY
 };
 
 struct Packed PingPacket {
@@ -82,6 +84,27 @@ struct Packed FileWriteRequest {
 	u16_t size;
 	u32_t checksum;
 	u8_t d[256];
+};
+
+struct Packed FileReadRequest {
+	u32_t position;
+	u8_t fileName[128];
+};
+
+struct Packed FileContentResponse {
+	u8_t r;
+	u32_t position;
+	u16_t size;
+	u32_t totalSize;
+	u8_t d[256];
+};
+
+struct Packed FileDeleteRequest {
+	u8_t fileName[128];
+};
+
+struct Packed PlayRequest {
+	u8_t fileName[128];
 };
 
 struct Packed EepromPacket {

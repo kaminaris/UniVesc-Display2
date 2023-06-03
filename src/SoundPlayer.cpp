@@ -1,5 +1,6 @@
 #include "SoundPlayer.h"
 
+
 bool SoundPlayer::playing = false;
 Audio* SoundPlayer::audio = nullptr;
 QueueHandle_t SoundPlayer::audioSetQueue = nullptr;
@@ -16,7 +17,6 @@ void SoundPlayer::init() {
 }
 
 void SoundPlayer::setVolume(u8_t volume) {
-	// audio->setVolume(volume);  // 0...21
 	struct AudioMessage msg = {
 		.cmd = (u8_t)SoundPlayer::SET_VOLUME,
 		.value = volume,
@@ -27,8 +27,8 @@ void SoundPlayer::setVolume(u8_t volume) {
 void SoundPlayer::play(const char* path) {
 	struct AudioMessage msg = {
 		.cmd = (u8_t)SoundPlayer::PLAY,
-		.txt = path,
 	};
+	strcpy(msg.fileName, path);
 	xQueueSend(audioSetQueue, &msg, portMAX_DELAY);
 }
 
@@ -41,14 +41,15 @@ void SoundPlayer::play(const char* path) {
 				audio->setVolume(audioRxTaskMessage.value);
 			}
 			else if (audioRxTaskMessage.cmd == SoundPlayer::PLAY) {
-				audio->connecttoFS(SPIFFS, audioRxTaskMessage.txt);
+				bool result = audio->connecttoFS(SPIFFS, audioRxTaskMessage.fileName);
+				appSerial.printf("Playing File: %s %d\n", audioRxTaskMessage.fileName, (int)result);
 			}
 		}
 
 		audio->loop();
 
 		if (!audio->isRunning()) {
-			sleep(1);
+			vTaskDelay(pdMS_TO_TICKS(100));
 		}
 	}
 }

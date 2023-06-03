@@ -76,6 +76,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				File file = root.openNextFile();
 
 				u32_t i = 0;
+				struct FileItemResponse fileItem = {.r = (u8_t)ResponseCode::FILE};
 				while (file) {
 					auto fileName = file.name();
 					auto fileSize = file.size();
@@ -83,7 +84,8 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 					appSerial.print("FILE: ");
 					appSerial.println(fileName);
 
-					struct FileItemResponse fileItem = {.r = (u8_t)ResponseCode::FILE, .index = i, .size = fileSize};
+					fileItem.index = i;
+					fileItem.size = fileSize;
 					memcpy(fileItem.fileName, fileName, strlen(fileName));
 
 					pTxCharacteristic->setValue((u8_t*)&fileItem, sizeof(fileItem));
@@ -111,7 +113,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				if (!file) {
 					appSerial.println("Error opening file for writing");
 					AppSerial::respondFail();
-					return;
+					break;
 				}
 
 				file.seek(request->position);
@@ -128,14 +130,69 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				break;
 			}
 
+			case PacketType::GET_FILE: {
+				auto* request = (FileReadRequest*)data;
+				auto fileName = (const char*)&request->fileName;
+				if (!SPIFFS.exists(fileName)) {
+					AppSerial::respondFail();
+					break;
+				}
+
+				File file = SPIFFS.open(fileName, FILE_READ);
+				if (!file) {
+					appSerial.println("Error opening file for writing");
+					AppSerial::respondFail();
+					return;
+				}
+
+				struct FileContentResponse response = {.r = (u8_t)ResponseCode::FILE_CONTENT};
+
+				file.seek(request->position);
+				auto byteRead = file.read(response.d, 256);
+				response.size = byteRead;
+				response.totalSize = file.size();
+
+				pTxCharacteristic->setValue((u8_t*)&response, sizeof(response));
+				pTxCharacteristic->notify();
+
+				file.close();
+
+				appSerial.printf("File read chunk %d\n", request->position);
+				appSerial.printf("File read %s\n", fileName);
+				break;
+			}
+
 			case PacketType::DELETE_FILE: {
+				auto* request = (FileDeleteRequest*)data;
+				auto fileName = (const char*)&request->fileName;
+				if (!SPIFFS.exists(fileName)) {
+					AppSerial::respondFail();
+					break;
+				}
+
+				if (SPIFFS.remove(fileName)) {
+					AppSerial::respondOk();
+				}
+				else {
+					AppSerial::respondFail();
+				}
 				break;
 			}
 
 			case PacketType::BEEP_TEST: {
 				SoundPlayer::play("/beep.mp3");
+				AppSerial::respondOk();
 				break;
 			}
+
+			case PacketType::PLAY: {
+				auto* request = (PlayRequest*)data;
+				auto fileName = (const char*)&request->fileName;
+				SoundPlayer::play(fileName);
+				AppSerial::respondOk();
+				break;
+			}
+
 			case PacketType::SET_VOLUME: {
 				auto* request = (SetVolumeRequest*)data;
 
@@ -256,13 +313,6 @@ void MyServerCallbacks::onConnect(NimBLEServer* server, ble_gap_conn_desc* desc)
 	deviceConnected = true;
 	appSerial.print("Client address: ");
 	appSerial.println(NimBLEAddress(desc->peer_ota_addr).toString().c_str());
-	/** We can use the connection handle here to ask for different connection parameters.
-	 *  Args: connection handle, min connection interval, max connection interval
-	 *  latency, supervision timeout.
-	 *  Units; Min/Max Intervals: 1.25 millisecond increments.
-	 *  Latency: number of intervals allowed to skip.
-	 *  Timeout: 10 millisecond increments, try for 5x interval time for best results.
-	 */
 	server->updateConnParams(desc->conn_handle, 6, 6, 0, 60);
 }
 

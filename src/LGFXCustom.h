@@ -117,7 +117,7 @@ class LGFXCustom : public lgfx::LGFX_Device {
 	[[noreturn]] static void lvglLoop(__unused void* parameter) {
 		while (true) {
 			lv_timer_handler();
-			vTaskDelay(pdMS_TO_TICKS(5));
+			vTaskDelay(pdMS_TO_TICKS(50));
 		}
 
 		vTaskDelete(nullptr);

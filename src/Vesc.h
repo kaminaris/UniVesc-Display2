@@ -41,6 +41,7 @@ class Vesc {
 
 	bool loadRequested = false;
 	bool saveRequested = false;
+	bool connected = false;
 	AppMode mode = Demo;
 
 	VescUart* vescUart = nullptr;

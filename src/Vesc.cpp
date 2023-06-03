@@ -47,9 +47,11 @@ void Vesc::read() {
 		}
 
 		mode = Live;
+		connected = true;
 	}
 	else {
-		appSerial.println("Failed to get data!");
+		connected = false;
+		// appSerial.println("Failed to get data!");
 #ifndef NO_DEMO
 		velocity = random(60);
 		voltage = random(MAX_BATTERY_VOLTAGE * 10) / 10;

@@ -3,6 +3,7 @@
 
 #include "Audio.h"
 #include "SPIFFS.h"
+#include "AppSerial.h"
 
 #define I2S_DOUT 37
 #define I2S_BCLK 36
@@ -12,7 +13,7 @@
 
 struct AudioMessage {
 	u8_t cmd;
-	const char* txt;
+	char fileName[128];
 	u32_t value;
 	u32_t ret;
 };
