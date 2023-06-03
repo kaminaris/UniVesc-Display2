@@ -1,1 +1,0 @@
-python ota_updater.py "48:27:e2:61:ae:31" ".pio/build/wt32-sc01-plus/firmware.bin"
