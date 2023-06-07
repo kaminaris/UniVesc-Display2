@@ -13,6 +13,7 @@
 
 #include "SPIFFS.h"
 #include "SoundPlayer.h"
+#include "Vesc.h"
 #include "WireBus.h"
 #include "packets.h"
 

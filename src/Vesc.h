@@ -11,7 +11,6 @@
 #define RXD2 14
 #define TXD2 11
 
-
 #define GEAR_RATIO (settings.motorPulley / settings.wheelPulley)
 
 enum AppMode { Demo, Live };

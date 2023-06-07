@@ -8,6 +8,7 @@ bool deviceConnected = false;
 bool oldDeviceConnected = false;
 u8_t txValue[512] = {0};
 FastCRC32 CRC32;
+extern Vesc vesc;
 
 struct BasicResponse okResponse = {(u8_t)ResponseCode::OK};
 struct BasicResponse failResponse = {(u8_t)ResponseCode::FAIL};
@@ -213,6 +214,20 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				pTxCharacteristic->setValue((u8_t*)&clk, sizeof(clk));
 				pTxCharacteristic->notify();
 				break;
+			}
+
+			case PacketType::GET_SETTINGS: {
+				pTxCharacteristic->setValue((u8_t*)&vesc.settings, sizeof(vesc.settings));
+				pTxCharacteristic->notify();
+				break;
+			}
+
+			case PacketType::SAVE_SETTINGS: {
+				auto* request = (VescSettings*)data;
+				memcpy(&vesc.settings, request, sizeof(vesc.settings));
+				vesc.save();
+
+				AppSerial::respondOk();
 			}
 
 			case PacketType::GET_EEPROM: {

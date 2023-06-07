@@ -28,7 +28,9 @@ enum PacketType {
 	DELETE_FILE,
 	BEEP_TEST,
 	SET_VOLUME,
-	PLAY
+	PLAY,
+	GET_SETTINGS,
+	SAVE_SETTINGS
 };
 
 struct Packed PingPacket {

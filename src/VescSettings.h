@@ -12,6 +12,7 @@ struct VescSettings {
 	float motorPulley = 1.0;
 	float wheelPulley = 1.0;
 	float maxMotorCurrent = 35.0;
+	float dutyWarning = 80.0;
 };
 
 #endif
