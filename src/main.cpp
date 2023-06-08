@@ -84,9 +84,8 @@ void setup() {
 
 	AppSerial::setup();
 
-	if (!SPIFFS.begin()) {
+	if (!SPIFFS.begin(true)) {
 		Serial.println("SPIFFS Mount Failed");
-		//return;
 	}
 
 	SoundPlayer::init();

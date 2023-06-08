@@ -30,7 +30,8 @@ enum PacketType {
 	SET_VOLUME,
 	PLAY,
 	GET_SETTINGS,
-	SAVE_SETTINGS
+	SAVE_SETTINGS,
+	GET_FILESYSTEM_INFO
 };
 
 struct Packed PingPacket {
@@ -78,6 +79,11 @@ struct Packed FirmwareUpdateRequest {
 	u32_t totalSize;
 	u32_t checksum;
 	u8_t d[450];
+};
+
+struct Packed FilesystemInfoResponse {
+	u32_t totalBytes;
+	u32_t usedBytes;
 };
 
 struct Packed FileWriteRequest {

@@ -1,6 +1,5 @@
 #include "SoundPlayer.h"
 
-
 bool SoundPlayer::playing = false;
 Audio* SoundPlayer::audio = nullptr;
 QueueHandle_t SoundPlayer::audioSetQueue = nullptr;
@@ -13,7 +12,8 @@ void SoundPlayer::init() {
 	playing = false;
 	audioSetQueue = xQueueCreate(10, sizeof(struct AudioMessage));
 
-	xTaskCreatePinnedToCore(SoundPlayer::loop, "Music Player", 16384, nullptr, 1, nullptr, 1);
+	// higher than lvgl
+	xTaskCreatePinnedToCore(SoundPlayer::loop, "Music Player", 16384, nullptr, 10, nullptr, 1);
 }
 
 void SoundPlayer::setVolume(u8_t volume) {

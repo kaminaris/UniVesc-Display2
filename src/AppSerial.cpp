@@ -72,6 +72,17 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				break;
 			}
 
+			case PacketType::GET_FILESYSTEM_INFO: {
+				struct FilesystemInfoResponse infoResponse = {
+					.totalBytes = SPIFFS.totalBytes(),
+					.usedBytes = SPIFFS.usedBytes(),
+				};
+
+				pTxCharacteristic->setValue((u8_t*)&infoResponse, sizeof(infoResponse));
+				pTxCharacteristic->notify();
+				break;
+			}
+
 			case PacketType::GET_FILE_LIST: {
 				File root = SPIFFS.open("/");
 				File file = root.openNextFile();
@@ -228,6 +239,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				vesc.save();
 
 				AppSerial::respondOk();
+				break;
 			}
 
 			case PacketType::GET_EEPROM: {
