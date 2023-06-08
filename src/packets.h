@@ -31,7 +31,8 @@ enum PacketType {
 	PLAY,
 	GET_SETTINGS,
 	SAVE_SETTINGS,
-	GET_FILESYSTEM_INFO
+	GET_FILESYSTEM_INFO,
+	GET_REALTIME_DATA
 };
 
 struct Packed PingPacket {

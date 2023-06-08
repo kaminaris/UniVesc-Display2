@@ -11,38 +11,38 @@ void Vesc::init() {
 
 void Vesc::read() {
 	if (vescUart->getVescValues()) {
-		motorTemp = vescUart->data.tempMotor;
-		mosfetTemp = vescUart->data.tempMosfet;
-		duty = abs(vescUart->data.dutyCycleNow) * 100;
-		wattHours = vescUart->data.wattHours;
+		data.motorTemp = vescUart->data.tempMotor;
+		data.mosfetTemp = vescUart->data.tempMosfet;
+		data.duty = abs(vescUart->data.dutyCycleNow) * 100;
+		data.wattHours = vescUart->data.wattHours;
 
-		voltage = vescUart->data.inpVoltage;
-		powerPercent = abs(vescUart->data.avgMotorCurrent / settings.maxMotorCurrent);
-		powerWatt = vescUart->data.avgMotorCurrent * voltage;
+		data.voltage = vescUart->data.inpVoltage;
+		data.powerPercent = abs(vescUart->data.avgMotorCurrent / settings.maxMotorCurrent);
+		data.powerWatt = vescUart->data.avgMotorCurrent * data.voltage;
 
 		// Code borrowed from
 		// https://github.com/TomStanton/VESC_LCD_EBIKE/blob/master/VESC6_LCD_EBIKE.ino
 
 		// This is the number of motor poles multiplied by 3
-		tachometer = vescUart->data.tachometerAbs / (settings.motorPolePairs * 2 * 3);
+		data.tachometer = vescUart->data.tachometerAbs / (settings.motorPolePairs * 2 * 3);
 
-		rpm = vescUart->data.rpm / settings.motorPolePairs;
+		data.rpm = vescUart->data.rpm / settings.motorPolePairs;
 
 		// Motor tacho x Pi x (1 / meters in a mile or km) x Wheel diameter x gear ratio
-		distance = tachometer * PI * (1.0 / 1000.0) * settings.wheelDiameter * GEAR_RATIO;
+		data.distance = data.tachometer * PI * (1.0 / 1000.0) * settings.wheelDiameter * GEAR_RATIO;
 
 		// Motor RPM x Pi x (seconds in a minute / meters in a kilometer) x Wheel diameter x gear ratio
-		velocity = rpm * PI * settings.wheelDiameter * (60.0 / 1000.0) * GEAR_RATIO;
+		data.velocity = data.rpm * PI * settings.wheelDiameter * (60.0 / 1000.0) * GEAR_RATIO;
 
 		// ((Battery voltage - minimum voltage) / number of cells) x 100
-		batPercentage = 100 * (vescUart->data.inpVoltage - settings.minBatteryVoltage) /
+		data.batPercentage = 100 * (vescUart->data.inpVoltage - settings.minBatteryVoltage) /
 						(settings.maxBatteryVoltage - settings.minBatteryVoltage);
 
-		settings.odo = floor(origOdo + distance);
-		avgSpeed = distance / (millis() / 1000.0 / 3600.0);
+		settings.odo = floor(data.origOdo + data.distance);
+		data.avgSpeed = data.distance / (millis() / 1000.0 / 3600.0);
 
-		if (velocity > settings.maxSpeed) {
-			settings.maxSpeed = velocity;
+		if (data.velocity > settings.maxSpeed) {
+			settings.maxSpeed = data.velocity;
 			save();
 		}
 
@@ -91,7 +91,7 @@ void Vesc::loadInternal() {
 		settings.odo,
 		settings.motorPulley
 	);
-	origOdo = settings.odo;
+	data.origOdo = settings.odo;
 	loadRequested = false;
 }
 

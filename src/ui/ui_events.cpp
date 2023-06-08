@@ -49,14 +49,14 @@ void odoClicked(lv_event_t* e) {
 void avgClicked(lv_event_t* e) {
 	// Your code here
 	appSerial.println("avg click");
-	vesc.avgSpeed = 0.0;
+	vesc.data.avgSpeed = 0.0;
 	vesc.save();
 }
 
 void tripClicked(lv_event_t* e) {
 	// Your code here
 	appSerial.println("trip click");
-	vesc.distance = 0.0;
+	vesc.data.distance = 0.0;
 	vesc.save();
 }
 

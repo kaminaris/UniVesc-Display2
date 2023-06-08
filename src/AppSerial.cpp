@@ -72,6 +72,12 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				break;
 			}
 
+			case PacketType::GET_REALTIME_DATA: {
+				pTxCharacteristic->setValue((u8_t*)&vesc.data, sizeof(vesc.data));
+				pTxCharacteristic->notify();
+				break;
+			}
+
 			case PacketType::GET_FILESYSTEM_INFO: {
 				struct FilesystemInfoResponse infoResponse = {
 					.totalBytes = SPIFFS.totalBytes(),

@@ -15,12 +15,12 @@
 
 enum AppMode { Demo, Live };
 
-class Vesc {
-	public:
+
+struct __attribute__((packed)) RealTimeData {
 	float tachometer = 0;
 	float rpm = 0;
 	float distance = 0;
-	double velocity = 0;
+	float velocity = 0;
 	float batPercentage = 0;
 	float motorTemp = 0;
 	float mosfetTemp = 0;
@@ -30,9 +30,13 @@ class Vesc {
 	float duty = 0;
 	float wattHours = 0;
 
-	// calculated values, not saved
 	float avgSpeed = 0;
 	float origOdo = 0;
+};
+
+class Vesc {
+	public:
+	struct RealTimeData data = {};
 
 	// settings
 	struct VescSettings origSettings = {};

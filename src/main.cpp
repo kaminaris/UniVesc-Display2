@@ -23,21 +23,21 @@ Vesc vesc;
 	while (true) {
 		vesc.read();
 
-		lv_bar_set_value(ui_batteryBar, (int)vesc.batPercentage, LV_ANIM_OFF);
+		lv_bar_set_value(ui_batteryBar, (int)vesc.data.batPercentage, LV_ANIM_OFF);
 		lv_color_t batteryColor =
-			lv_color_make(255 - 255 * vesc.batPercentage / 100, 255 * vesc.batPercentage / 100, 0);
+			lv_color_make(255 - 255 * vesc.data.batPercentage / 100, 255 * vesc.data.batPercentage / 100, 0);
 		lv_obj_set_style_bg_color(ui_batteryBar, batteryColor, LV_PART_INDICATOR);
-		lv_label_set_text(ui_batteryPercentage, (String(vesc.batPercentage, 0) + "%").c_str());
-		lv_label_set_text(ui_speed, String(vesc.velocity, 0).c_str());
-		lv_arc_set_value(ui_speedGauge, (short)abs(vesc.velocity));
-		lv_label_set_text(ui_motorTemp, (String(vesc.motorTemp, 1) + "°C").c_str());
-		lv_label_set_text(ui_mosfetTemp, (String(vesc.mosfetTemp, 1) + "°C").c_str());
-		lv_label_set_text(ui_batteryVoltage, (String(vesc.voltage, 1) + "V").c_str());
-		lv_label_set_text(ui_duty, (String(vesc.duty, 0) + "%").c_str());
-		lv_label_set_text(ui_trip, (String(vesc.distance, 1) + "km").c_str());
+		lv_label_set_text(ui_batteryPercentage, (String(vesc.data.batPercentage, 0) + "%").c_str());
+		lv_label_set_text(ui_speed, String(vesc.data.velocity, 0).c_str());
+		lv_arc_set_value(ui_speedGauge, (short)abs(vesc.data.velocity));
+		lv_label_set_text(ui_motorTemp, (String(vesc.data.motorTemp, 1) + "°C").c_str());
+		lv_label_set_text(ui_mosfetTemp, (String(vesc.data.mosfetTemp, 1) + "°C").c_str());
+		lv_label_set_text(ui_batteryVoltage, (String(vesc.data.voltage, 1) + "V").c_str());
+		lv_label_set_text(ui_duty, (String(vesc.data.duty, 0) + "%").c_str());
+		lv_label_set_text(ui_trip, (String(vesc.data.distance, 1) + "km").c_str());
 		lv_label_set_text(ui_odo, (String(vesc.settings.odo, 0) + "km").c_str());
 		lv_label_set_text(ui_maxSpeed, (String(vesc.settings.maxSpeed, 0) + "km/h").c_str());
-		lv_label_set_text(ui_avgSpeed, (String(vesc.avgSpeed, 0) + "km/h").c_str());
+		lv_label_set_text(ui_avgSpeed, (String(vesc.data.avgSpeed, 0) + "km/h").c_str());
 
 		vTaskDelay(pdMS_TO_TICKS(500));
 	}
