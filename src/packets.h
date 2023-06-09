@@ -92,7 +92,7 @@ struct Packed FileWriteRequest {
 	u32_t position;
 	u16_t size;
 	u32_t checksum;
-	u8_t d[256];
+	u8_t d[370];
 };
 
 struct Packed FileReadRequest {
@@ -105,7 +105,7 @@ struct Packed FileContentResponse {
 	u32_t position;
 	u16_t size;
 	u32_t totalSize;
-	u8_t d[256];
+	u8_t d[370];
 };
 
 struct Packed FileDeleteRequest {

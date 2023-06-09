@@ -104,6 +104,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 
 					fileItem.index = i;
 					fileItem.size = fileSize;
+					memset(fileItem.fileName, 0, sizeof(fileItem.fileName));
 					memcpy(fileItem.fileName, fileName, strlen(fileName));
 
 					pTxCharacteristic->setValue((u8_t*)&fileItem, sizeof(fileItem));
@@ -166,7 +167,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				struct FileContentResponse response = {.r = (u8_t)ResponseCode::FILE_CONTENT};
 
 				file.seek(request->position);
-				auto byteRead = file.read(response.d, 256);
+				auto byteRead = file.read(response.d, 374);
 				response.size = byteRead;
 				response.totalSize = file.size();
 
@@ -184,6 +185,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 				auto* request = (FileDeleteRequest*)data;
 				auto fileName = (const char*)&request->fileName;
 				if (!SPIFFS.exists(fileName)) {
+					appSerial.printf("File does not exist %s\n", fileName);
 					AppSerial::respondFail();
 					break;
 				}
@@ -192,6 +194,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 					AppSerial::respondOk();
 				}
 				else {
+					appSerial.printf("Unable to delete %s\n", fileName);
 					AppSerial::respondFail();
 				}
 				break;
@@ -360,7 +363,7 @@ void MyServerCallbacks::onDisconnect(NimBLEServer* server) {
 
 void AppSerial::setup() {
 	// Create the BLE Device
-	NimBLEDevice::init("UART Service");
+	NimBLEDevice::init("UniVesc");
 	NimBLEDevice::setPower(ESP_PWR_LVL_P9);
 	NimBLEDevice::setMTU(512);
 
