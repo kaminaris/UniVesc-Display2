@@ -7,8 +7,8 @@
 
 #include "WireBus.h"
 #include "ui.h"
-#include "Vesc.h"
-#include "SoundPlayer.h"
+#include "Vesc/Vesc.h"
+#include "Sound/SoundPlayer.h"
 
 extern Vesc vesc;
 

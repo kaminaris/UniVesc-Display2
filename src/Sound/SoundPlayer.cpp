@@ -1,10 +1,6 @@
 #include "SoundPlayer.h"
 
-bool SoundPlayer::playing = false;
-Audio* SoundPlayer::audio = nullptr;
-QueueHandle_t SoundPlayer::audioSetQueue = nullptr;
-
-void SoundPlayer::init() {
+SoundPlayer::SoundPlayer() {
 	audio = new Audio();
 	audio->setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
 	audio->setVolume(5);  // 0...21
@@ -13,7 +9,7 @@ void SoundPlayer::init() {
 	audioSetQueue = xQueueCreate(10, sizeof(struct AudioMessage));
 
 	// higher than lvgl
-	xTaskCreatePinnedToCore(SoundPlayer::loop, "Music Player", 16384, nullptr, 10, nullptr, 1);
+	xTaskCreatePinnedToCore(SoundPlayer::loop, "Music Player", 16384, (void*)this, 10, nullptr, 1);
 }
 
 void SoundPlayer::setVolume(u8_t volume) {
@@ -32,24 +28,26 @@ void SoundPlayer::play(const char* path) {
 	xQueueSend(audioSetQueue, &msg, portMAX_DELAY);
 }
 
-[[noreturn]] void SoundPlayer::loop(__unused void* parameter) {
+[[noreturn]] void SoundPlayer::loop(void* t) {
+	auto sp = (SoundPlayer*)t;
+
 	struct AudioMessage audioRxTaskMessage = {};
 
 	while (true) {
-		if (xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
+		if (!sp->audio->isRunning() && xQueueReceive(sp->audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
 			if (audioRxTaskMessage.cmd == SoundPlayer::SET_VOLUME) {
-				audio->setVolume(audioRxTaskMessage.value);
+				sp->audio->setVolume(audioRxTaskMessage.value);
 			}
 			else if (audioRxTaskMessage.cmd == SoundPlayer::PLAY) {
-				bool result = audio->connecttoFS(SPIFFS, audioRxTaskMessage.fileName);
+				bool result = sp->audio->connecttoFS(SPIFFS, audioRxTaskMessage.fileName);
 				appSerial.printf("Playing File: %s %d\n", audioRxTaskMessage.fileName, (int)result);
 			}
 		}
 
-		audio->loop();
+		sp->audio->loop();
 
-		if (!audio->isRunning()) {
-			vTaskDelay(pdMS_TO_TICKS(100));
+		if (!sp->audio->isRunning()) {
+			vTaskDelay(pdMS_TO_TICKS(50));
 		}
 	}
 }

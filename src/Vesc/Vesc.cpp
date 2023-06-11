@@ -1,12 +1,17 @@
 #include "Vesc.h"
 
-#define NO_DEMO 1
+// #define NO_DEMO 1
 
 void Vesc::init() {
 	Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);
 	vescUart = new VescUart(300);
 	vescUart->setSerialPort(&Serial2);
 	// vescUart->setDebugPort(&Serial);
+
+	dutyTune = new SoundTune("/beep.mp3");
+	motorTune = new SoundTune("/motortemp.mp3");
+	mosfetTune = new SoundTune("/mosfettemp.mp3");
+	speedTune = new SoundTune("/speed.mp3");
 }
 
 void Vesc::read() {
@@ -32,7 +37,7 @@ void Vesc::read() {
 		data.distance = data.tachometer * PI * (1.0 / 1000.0) * settings.wheelDiameter * GEAR_RATIO;
 
 		// Motor RPM x Pi x (seconds in a minute / meters in a kilometer) x Wheel diameter x gear ratio
-		data.velocity = data.rpm * PI * settings.wheelDiameter * (60.0 / 1000.0) * GEAR_RATIO;
+		data.speed = data.rpm * PI * settings.wheelDiameter * (60.0 / 1000.0) * GEAR_RATIO;
 
 		// ((Battery voltage - minimum voltage) / number of cells) x 100
 		data.batPercentage = 100 * (vescUart->data.inpVoltage - settings.minBatteryVoltage) /
@@ -41,27 +46,38 @@ void Vesc::read() {
 		settings.odo = floor(data.origOdo + data.distance);
 		data.avgSpeed = data.distance / (millis() / 1000.0 / 3600.0);
 
-		if (data.velocity > settings.maxSpeed) {
-			settings.maxSpeed = data.velocity;
+		if (data.speed > settings.maxSpeed) {
+			settings.maxSpeed = data.speed;
 			save();
 		}
 
 		mode = Live;
 		connected = true;
+
+
+		dutyTune->toggle(data.duty * 100 > settings.dutyWarning);
+		motorTune->toggle(data.motorTemp > settings.motorTempWarning);
+		mosfetTune->toggle(data.mosfetTemp > settings.mosfetTempWarning);
+		speedTune->toggle(data.speed > settings.speedWarning);
 	}
 	else {
 		connected = false;
 		// appSerial.println("Failed to get data!");
 #ifndef NO_DEMO
-		velocity = random(60);
-		voltage = random(MAX_BATTERY_VOLTAGE * 10) / 10;
-		batPercentage = random(100);
-		powerWatt = random(2200);
-		powerPercent = random(100);
-		motorTemp = random(500) / 10;
-		mosfetTemp = random(500) / 10;
+		data.speed = random(60);
+		data.voltage = random(settings.maxBatteryVoltage * 10) / 10;
+		data.batPercentage = random(100);
+		data.powerWatt = random(2200);
+		data.powerPercent = random(100);
+		data.motorTemp = random(500) / 10;
+		data.mosfetTemp = random(500) / 10;
 
 		mode = Demo;
+
+		dutyTune->toggle(data.duty * 100 > settings.dutyWarning);
+		motorTune->toggle(data.motorTemp > settings.motorTempWarning);
+		mosfetTune->toggle(data.mosfetTemp > settings.mosfetTempWarning);
+		speedTune->toggle(data.speed > settings.speedWarning);
 #endif
 	}
 }

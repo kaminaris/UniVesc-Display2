@@ -3,24 +3,26 @@
 
 #include <Arduino.h>
 
+#include "AppSerial.h"
+#include "Sound/SoundTune.h"
+#include "VescSettings.h"
 #include "VescUart.h"
 #include "WireBus.h"
-#include "VescSettings.h"
-#include "AppSerial.h"
 
 #define RXD2 14
 #define TXD2 11
 
 #define GEAR_RATIO (settings.motorPulley / settings.wheelPulley)
 
-enum AppMode { Demo, Live };
+class SoundTune;
 
+enum AppMode { Demo, Live };
 
 struct __attribute__((packed)) RealTimeData {
 	float tachometer = 0;
 	float rpm = 0;
 	float distance = 0;
-	float velocity = 0;
+	float speed = 0;
 	float batPercentage = 0;
 	float motorTemp = 0;
 	float mosfetTemp = 0;
@@ -46,6 +48,11 @@ class Vesc {
 	bool saveRequested = false;
 	bool connected = false;
 	AppMode mode = Demo;
+
+	SoundTune* dutyTune;
+	SoundTune* motorTune;
+	SoundTune* mosfetTune;
+	SoundTune* speedTune;
 
 	VescUart* vescUart = nullptr;
 

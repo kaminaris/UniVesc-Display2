@@ -9,6 +9,7 @@ bool oldDeviceConnected = false;
 u8_t txValue[512] = {0};
 FastCRC32 CRC32;
 extern Vesc vesc;
+extern SoundPlayer* soundPlayer;
 
 struct BasicResponse okResponse = {(u8_t)ResponseCode::OK};
 struct BasicResponse failResponse = {(u8_t)ResponseCode::FAIL};
@@ -201,7 +202,13 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 			}
 
 			case PacketType::BEEP_TEST: {
-				SoundPlayer::play("/beep.mp3");
+				soundPlayer->play("/beep.mp3");
+				AppSerial::respondOk();
+				break;
+			}
+
+			case PacketType::TUNE_TEST: {
+				vesc.dutyTune->toggle();
 				AppSerial::respondOk();
 				break;
 			}
@@ -209,7 +216,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 			case PacketType::PLAY: {
 				auto* request = (PlayRequest*)data;
 				auto fileName = (const char*)&request->fileName;
-				SoundPlayer::play(fileName);
+				soundPlayer->play(fileName);
 				AppSerial::respondOk();
 				break;
 			}
@@ -217,7 +224,7 @@ void MyCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
 			case PacketType::SET_VOLUME: {
 				auto* request = (SetVolumeRequest*)data;
 
-				SoundPlayer::setVolume(request->volume);
+				soundPlayer->setVolume(request->volume);
 				AppSerial::respondOk();
 				break;
 			}

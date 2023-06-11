@@ -1,15 +1,13 @@
 #ifndef UNIVESCDISPLAY2_SOUNDPLAYER_H
 #define UNIVESCDISPLAY2_SOUNDPLAYER_H
 
+#include "AppSerial.h"
 #include "Audio.h"
 #include "SPIFFS.h"
-#include "AppSerial.h"
 
 #define I2S_DOUT 37
 #define I2S_BCLK 36
 #define I2S_LRC 35
-
-
 
 struct AudioMessage {
 	u8_t cmd;
@@ -20,16 +18,17 @@ struct AudioMessage {
 
 class SoundPlayer {
 	enum : u8_t { SET_VOLUME, GET_VOLUME, PLAY };
-	public:
-	static QueueHandle_t audioSetQueue;
-	static bool playing;
-	static Audio* audio;
 
-	static void init();
+	public:
+	QueueHandle_t audioSetQueue;
+	bool playing;
+	Audio* audio;
+
+	SoundPlayer();
 	[[noreturn]] static void loop(void* parameter);
-	static void playPause();
-	static void play(const char* path);
-	static void setVolume(u8_t volume);
+	void playPause();
+	void play(const char* path);
+	void setVolume(u8_t volume);
 };
 
 #endif

@@ -5,10 +5,10 @@
 #include <lvgl.h>
 
 #include "AppSerial.h"
-#include "Vesc.h"
+#include "Vesc/Vesc.h"
 #include "WireBus.h"
 #include "ui/ui.h"
-#include "SoundPlayer.h"
+#include "Sound/SoundPlayer.h"
 
 #define SD_CS 41
 #define SDMMC_CMD 40
@@ -18,6 +18,7 @@
 bool lossOccurred = false;
 
 Vesc vesc;
+SoundPlayer* soundPlayer;
 
 [[noreturn]] void readVescTask(__unused void* pvParameters) {
 	while (true) {
@@ -28,8 +29,8 @@ Vesc vesc;
 			lv_color_make(255 - 255 * vesc.data.batPercentage / 100, 255 * vesc.data.batPercentage / 100, 0);
 		lv_obj_set_style_bg_color(ui_batteryBar, batteryColor, LV_PART_INDICATOR);
 		lv_label_set_text(ui_batteryPercentage, (String(vesc.data.batPercentage, 0) + "%").c_str());
-		lv_label_set_text(ui_speed, String(vesc.data.velocity, 0).c_str());
-		lv_arc_set_value(ui_speedGauge, (short)abs(vesc.data.velocity));
+		lv_label_set_text(ui_speed, String(vesc.data.speed, 0).c_str());
+		lv_arc_set_value(ui_speedGauge, (short)abs(vesc.data.speed));
 		lv_label_set_text(ui_motorTemp, (String(vesc.data.motorTemp, 1) + "°C").c_str());
 		lv_label_set_text(ui_mosfetTemp, (String(vesc.data.mosfetTemp, 1) + "°C").c_str());
 		lv_label_set_text(ui_batteryVoltage, (String(vesc.data.voltage, 1) + "V").c_str());
@@ -88,7 +89,7 @@ void setup() {
 		Serial.println("SPIFFS Mount Failed");
 	}
 
-	SoundPlayer::init();
+	soundPlayer = new SoundPlayer();
 
 	appSerial.println("Device ready");
 }

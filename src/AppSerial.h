@@ -12,8 +12,9 @@
 #include <cstring>
 
 #include "SPIFFS.h"
-#include "SoundPlayer.h"
-#include "Vesc.h"
+#include "Sound/SoundTune.h"
+#include "Sound/SoundPlayer.h"
+#include "Vesc/Vesc.h"
 #include "WireBus.h"
 #include "packets.h"
 
