@@ -34,17 +34,17 @@ void Vesc::read() {
 		data.rpm = vescUart->data.rpm / settings.motorPolePairs;
 
 		// Motor tacho x Pi x (1 / meters in a mile or km) x Wheel diameter x gear ratio
-		data.distance = data.tachometer * PI * (1.0 / 1000.0) * settings.wheelDiameter * GEAR_RATIO;
+		data.distance = data.tachometer * PI * (1.0f / 1000.0f) * settings.wheelDiameter * GEAR_RATIO;
 
 		// Motor RPM x Pi x (seconds in a minute / meters in a kilometer) x Wheel diameter x gear ratio
-		data.speed = data.rpm * PI * settings.wheelDiameter * (60.0 / 1000.0) * GEAR_RATIO;
+		data.speed = data.rpm * PI * settings.wheelDiameter * (60.0f / 1000.0f) * GEAR_RATIO;
 
 		// ((Battery voltage - minimum voltage) / number of cells) x 100
 		data.batPercentage = 100 * (vescUart->data.inpVoltage - settings.minBatteryVoltage) /
 						(settings.maxBatteryVoltage - settings.minBatteryVoltage);
 
 		settings.odo = floor(data.origOdo + data.distance);
-		data.avgSpeed = data.distance / (millis() / 1000.0 / 3600.0);
+		data.avgSpeed = data.distance / (millis() / 1000.0f / 3600.0f);
 
 		if (data.speed > settings.maxSpeed) {
 			settings.maxSpeed = data.speed;
@@ -74,10 +74,10 @@ void Vesc::read() {
 
 		mode = Demo;
 
-		dutyTune->toggle(data.duty * 100 > settings.dutyWarning);
-		motorTune->toggle(data.motorTemp > settings.motorTempWarning);
-		mosfetTune->toggle(data.mosfetTemp > settings.mosfetTempWarning);
-		speedTune->toggle(data.speed > settings.speedWarning);
+		// dutyTune->toggle(data.duty * 100 > settings.dutyWarning);
+		// motorTune->toggle(data.motorTemp > settings.motorTempWarning);
+		// mosfetTune->toggle(data.mosfetTemp > settings.mosfetTempWarning);
+		// speedTune->toggle(data.speed > settings.speedWarning);
 #endif
 	}
 }

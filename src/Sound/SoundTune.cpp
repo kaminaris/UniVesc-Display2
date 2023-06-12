@@ -42,6 +42,12 @@ void SoundTune::toggle() {
 [[noreturn]] void SoundTune::loop(void* t) {
 	auto tune = (SoundTune*)t;
 	while (true) {
+		u32_t now = millis();
+		if (now - tune->lastPlayed < tune->frequency) {
+			vTaskDelay(pdMS_TO_TICKS(now - tune->lastPlayed));
+		}
+
+		tune->lastPlayed = now;
 		soundPlayer->play(tune->file);
 		vTaskDelay(pdMS_TO_TICKS(tune->frequency));
 	}

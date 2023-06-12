@@ -3,7 +3,7 @@
 SoundPlayer::SoundPlayer() {
 	audio = new Audio();
 	audio->setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-	audio->setVolume(5);  // 0...21
+	audio->setVolume(21);  // 0...21
 	audio->forceMono(true);
 	playing = false;
 	audioSetQueue = xQueueCreate(10, sizeof(struct AudioMessage));
@@ -12,7 +12,13 @@ SoundPlayer::SoundPlayer() {
 	xTaskCreatePinnedToCore(SoundPlayer::loop, "Music Player", 16384, (void*)this, 10, nullptr, 1);
 }
 
-void SoundPlayer::setVolume(u8_t volume) {
+void SoundPlayer::setVolume(u8_t volume) const {
+	u32_t spaceLeft = uxQueueSpacesAvailable(audioSetQueue);
+	if (spaceLeft <= 0) {
+		appSerial.printf("AudioQueue is full!");
+		return;
+	}
+
 	struct AudioMessage msg = {
 		.cmd = (u8_t)SoundPlayer::SET_VOLUME,
 		.value = volume,
@@ -20,11 +26,18 @@ void SoundPlayer::setVolume(u8_t volume) {
 	xQueueSend(audioSetQueue, &msg, portMAX_DELAY);
 }
 
-void SoundPlayer::play(const char* path) {
+void SoundPlayer::play(const char* path) const {
+	u32_t spaceLeft = uxQueueSpacesAvailable(audioSetQueue);
+	if (spaceLeft <= 0) {
+		appSerial.printf("AudioQueue is full!");
+		return;
+	}
+
 	struct AudioMessage msg = {
 		.cmd = (u8_t)SoundPlayer::PLAY,
 	};
 	strcpy(msg.fileName, path);
+
 	xQueueSend(audioSetQueue, &msg, portMAX_DELAY);
 }
 

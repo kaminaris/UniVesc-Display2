@@ -8,8 +8,9 @@
 class SoundTune {
 	public:
 	const char* file;
-	float frequency = 1000;
+	u32_t frequency = 1000;
 	bool running = false;
+	u32_t lastPlayed = 0;
 	TaskHandle_t handle = nullptr;
 
 	explicit SoundTune(const char* f);

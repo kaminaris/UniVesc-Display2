@@ -27,8 +27,8 @@ class SoundPlayer {
 	SoundPlayer();
 	[[noreturn]] static void loop(void* parameter);
 	void playPause();
-	void play(const char* path);
-	void setVolume(u8_t volume);
+	void play(const char* path) const;
+	void setVolume(u8_t volume) const;
 };
 
 #endif
